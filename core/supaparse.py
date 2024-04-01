@@ -1,6 +1,8 @@
 """
 supaparse.py
 
+FIXME
+
 This module allows you to read, interpret and write to SP and DAT files.
 """
 
@@ -36,12 +38,12 @@ def interpret_sp_data(data: bytearray) -> dict[str, bytearray]:
     level: dict[str, bytearray] = {
         'level': data[:1440],
         'unused': data[1440:1444],
-        'initial_gravitation': data[1444],
-        'space': data[1445],
+        'initial_gravitation': bytearray(data[1444]),
+        'space': bytearray(data[1445]),
         'level_title': data[1446:1469],
-        'initial_freeze_zonks': data[1469],
-        'number_of_infotrons_needed': data[1470],
-        'number_of_special_ports': data[1471],
+        'initial_freeze_zonks': bytearray(data[1469]),
+        'number_of_infotrons_needed': bytearray(data[1470]),
+        'number_of_special_ports': bytearray(data[1471]),
         'special_port1': data[1472:1478],
         'special_port2': data[1478:1484],
         'special_port3': data[1484:1490],
@@ -68,13 +70,21 @@ def write_sp_file(filename: str, level: dict[str, bytearray]):
 
 
 def read_dat_file(filename: str):
+    """
+    BUG
+    """
+    
     with open(filename, 'rb') as f:
         data = bytearray(f.read())
 
     return data
 
 
-def interpret_dat_data(data: bytearray) -> list:    
+def interpret_dat_data(data: bytearray) -> list:
+    """
+    BUG
+    """
+    
     levels: list[dict[str, bytearray]] = []
     
     for i in range(0, len(data), 1536):
@@ -83,12 +93,12 @@ def interpret_dat_data(data: bytearray) -> list:
         level: dict[str, bytearray] = {
             'level': level_data[:1440],
             'unused': level_data[1440:1444],
-            'initial_gravitation': level_data[1444],
-            'space': level_data[1445],
+            'initial_gravitation': bytearray(level_data[1444]),
+            'space': bytearray(level_data[1445]),
             'level_title': level_data[1446:1469],
-            'initial_freeze_zonks': level_data[1469],
-            'number_of_infotrons_needed': level_data[1470],
-            'number_of_special_ports': level_data[1471],
+            'initial_freeze_zonks': bytearray(level_data[1469]),
+            'number_of_infotrons_needed': bytearray(level_data[1470]),
+            'number_of_special_ports': bytearray(level_data[1471]),
             'special_port1': level_data[1472:1478],
             'special_port2': level_data[1478:1484],
             'special_port3': level_data[1484:1490],
@@ -133,11 +143,15 @@ def interpret_dat_data(data: bytearray) -> list:
 
 
 def write_dat_file(filename: str, levels: list[dict[str, bytearray]]):
+    """
+    BUG
+    """
+    
     data = bytearray()
     
-    for level in levels:
+    for level in levels[:111]:
         for level_data in level.values():
-            data.extend(level_data)
+            data.extend(level_data[:1536])
     
     with open(filename, 'wb') as f:
         f.write(data)
