@@ -59,14 +59,33 @@ def interpret_sp_data(data: bytearray) -> dict[str, bytearray]:
     return level
 
 
-def write_sp_file(filename: str, level: dict[str, bytearray]):
+def format_back_sp_data(level: dict[str, bytearray]) -> bytearray:
     data = bytearray()
     
     for value in level.values():
         data.extend(value)
+        
+    return data
 
+
+def write_sp_file(filename: str, level: dict[str, bytearray] | bytearray):
+    if isinstance(level, dict):
+        level = format_back_sp_data(level)
+        
     with open(filename, 'wb') as f:
-        f.write(data)
+        f.write(level)
+
+
+class DATFile:
+    """
+    DATFile
+
+    Class for working with DAT files (DOS Supaplex Levelsets)
+    
+    By itself, it can write to any file with any extension but usually levelsets have either one of 2 extensions:
+    - DAT
+    - Dxy, where x is a number between 0 and 9 and y is between 1 and 9
+    """
 
 
 def read_dat_file(filename: str):
