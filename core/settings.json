@@ -2,6 +2,10 @@
     "colormap": {},
     "tags": {},
     "testProviders": {},
+    "reminders": {},
+    "userCommands": {},
     "allowEvaluate": false,
+    "allowDelete": false,
+    "useOnlineHelp": false,
     "logging": true 
 }

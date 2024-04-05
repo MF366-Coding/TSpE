@@ -24,7 +24,7 @@ def read_sp_file(filename: str) -> bytearray:
     return data
 
 
-def interpret_sp_data(data: bytearray) -> dict[str, bytearray]:
+def interpret_sp_data(data: bytearray) -> dict[str, list[int]]:
     """
     interpret_sp_data interprets the contents of a SP file
 
@@ -35,31 +35,31 @@ def interpret_sp_data(data: bytearray) -> dict[str, bytearray]:
         dict[str, bytearray]: relation key - value, with strings as keys, bytearrays as values
     """
     
-    level: dict[str, bytearray] = {
-        'level': data[:1440],
-        'unused': data[1440:1444],
-        'initial_gravitation': bytearray(data[1444]),
-        'space': bytearray(data[1445]),
-        'level_title': data[1446:1469],
-        'initial_freeze_zonks': bytearray(data[1469]),
-        'number_of_infotrons_needed': bytearray(data[1470]),
-        'number_of_special_ports': bytearray(data[1471]),
-        'special_port1': data[1472:1478],
-        'special_port2': data[1478:1484],
-        'special_port3': data[1484:1490],
-        'special_port4': data[1490:1496],
-        'special_port5': data[1496:1502],
-        'special_port6': data[1502:1508],
-        'special_port7': data[1508:1514],
-        'special_port8': data[1514:1520],
-        'special_port9': data[1520:1526],
-        'special_port10': data[1526:1532]
+    level: dict[str, list[int]] = {
+        'level': list(data[:1440]),
+        'unused': list(data[1440:1444]),
+        'initial_gravitation': list(data[1444]),
+        'space': list(data[1445]),
+        'level_title': list(data[1446:1469]),
+        'initial_freeze_zonks': list(data[1469]),
+        'number_of_infotrons_needed': list(data[1470]),
+        'number_of_special_ports': list(data[1471]),
+        'special_port1': list(data[1472:1478]),
+        'special_port2': list(data[1478:1484]),
+        'special_port3': list(data[1484:1490]),
+        'special_port4': list(data[1490:1496]),
+        'special_port5': list(data[1496:1502]),
+        'special_port6': list(data[1502:1508]),
+        'special_port7': list(data[1508:1514]),
+        'special_port8': list(data[1514:1520]),
+        'special_port9': list(data[1520:1526]),
+        'special_port10': list(data[1526:1532])
     }
     
     return level
 
 
-def format_back_sp_data(level: dict[str, bytearray]) -> bytearray:
+def format_back_sp_data(level: dict[str, list[int]]) -> bytearray:
     data = bytearray()
     
     for value in level.values():
@@ -68,7 +68,7 @@ def format_back_sp_data(level: dict[str, bytearray]) -> bytearray:
     return data
 
 
-def write_sp_file(filename: str, level: dict[str, bytearray] | bytearray):
+def write_sp_file(filename: str, level: dict[str, list[int]] | bytearray):
     if isinstance(level, dict):
         level = format_back_sp_data(level)
         
@@ -86,17 +86,34 @@ class DATFile:
     - DAT
     - Dxy, where x is a number between 0 and 9 and y is between 1 and 9
     """
-
-
-def read_dat_file(filename: str):
-    """
-    BUG
-    """
     
-    with open(filename, 'rb') as f:
-        data = bytearray(f.read())
+    def __init__(self, filename: str):
+        self._FILENAME = filename
+        self._levelset: list[dict[str, list[int]]] = None
+        self.reload_levelset()
+        
+    def reload_levelset(self):
+        self._interpret_levelset(self._read_file(self._FILENAME))
+    
+    def _read_file(self, filename: str) -> bytearray:
+        with open(filename, 'rb') as f:
+            data = bytearray(f.read())
 
-    return data
+        return data
+
+    def _interpret_levelset(self, contents: bytearray):
+        self._levelset = []
+        
+        for level_num in range(111):
+            cur_iter = level_num * 1536
+            self._levelset.append(interpret_sp_data(contents[cur_iter:cur_iter + 1536]))
+            
+    def save_to_file(self, filepath: str):
+        with open(filepath, 'wb') as f:
+            for level in self._levelset:
+                f.write(format_back_sp_data(level))
+                
+    write_file = save_to_file
 
 
 def interpret_dat_data(data: bytearray) -> list:
