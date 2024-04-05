@@ -1,34 +1,67 @@
 import json
 
 
-def get_settings(path: str) -> dict[str, dict[str, str] | bool]:
-    with open(path, 'r', encoding='utf-8') as f:
-        settings = json.load(f)
-        
-    return settings
+class SettingsParser:
+    def __init__(self, path: str) -> None:
+        self._path = path
+        self._settings: dict[str, dict[str, str] | bool] | None = None
+        self._get_settings()
 
-
-def save_settings(path: str, settings: dict[str, dict[str, str] | bool]):
-    with open(path, 'w', encoding='utf-8') as f:
-        json.dump(settings, f, indent=4)
-
-
-def parse_colormap(settings: dict[str, dict[str, str] | bool]) -> dict[str, str]:
-    return settings['colormap']
-
-
-def parse_testers(settings: dict[str, dict[str, str] | bool]) -> dict[str, str]:
-    return settings['testProviders']
-
-
-def parse_tags(settings: dict[str, dict[str, str] | bool]) -> dict[str, str]:
-    return settings['tags']
-
-
-def parse_reminders(settings: dict[str, dict[str, str] | bool]) -> dict[str, str]:
-    return settings['reminders']
-
-
-# [!!] VERY Experimental feature (might not go thru in final version)
-def parse_user_commands(settings: dict[str, dict[str, str] | bool]) -> dict[str, str]:
-    return settings['userCommands']
+    def _get_settings(self):
+        with open(self._path, 'r', encoding='utf-8') as f:
+            self._settings = json.load(f)
+            
+    def save_settings(self):
+        with open(self._path, 'w', encoding='utf-8') as f:
+            json.dump(self._settings, f, indent=4)
+            
+    def save_reload(self):
+        self.save_settings()
+        self._get_settings()
+    
+    def force_reload(self, path: str | None = None):
+        self._path = path if path is not None else self._path
+        self._get_settings()
+    
+    @property
+    def settings(self) -> dict[str, dict[str, str] | bool]:
+        return self._settings
+    
+    @property
+    def colormap(self) -> dict[str, str]:
+        return self._settings['colormap']
+    
+    @property
+    def testers(self) -> dict[str, str]:
+        return self._settings['testProviders']
+    
+    @property
+    def tags(self) -> dict[str, str]:
+        return self._settings['tags']
+    
+    @property
+    def reminders(self) -> dict[str, str]:
+        return self._settings['reminders']
+    
+    # [!!] VERY Experimental feature (might not go thru in final version)
+    @property
+    def user_commands(self) -> dict[str, str]:
+        return self._settings['userCommands']
+    
+    @property
+    def allow_eval(self) -> bool:
+        return self._settings['allowEvaluate']
+    
+    @property
+    def allow_del(self) -> bool:
+        return self._settings['allowDelete']
+    
+    @property
+    def online_help(self) -> bool:
+        return self._settings['useOnlineHelp']
+    
+    @property
+    def logging(self) -> bool:
+        return self._settings['logging']
+       
+    test_providers: property = testers
