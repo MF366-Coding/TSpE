@@ -5,15 +5,15 @@ This module allows you to read, interpret and write to SP and DAT files.
 """
 
 
-def read_sp_file(filename: str) -> bytearray:
+def get_file_contents_as_bytearray(filename: str) -> bytearray:
     """
-    read_sp_file allows for storing the contents of an SP file as a bytearray
+    get_file_contents_as_bytearray allows for storing the contents of a file as a bytearray
 
     Args:
         filename (str): the path to the file
 
     Returns:
-        bytearray: the contents of the SP file
+        bytearray: the first 1536 bytes of the file
     """
     
     with open(filename, 'rb') as f:
@@ -97,9 +97,9 @@ def write_sp_file(filename: str, level: dict[str, list[int]] | bytearray):
         f.write(level)
 
 
-class DATFile:
+class SupaplexLevelsetFile:
     """
-    DATFile
+    SupaplexLevelsetFile
 
     Class for working with DAT files (DOS Supaplex Levelsets)
     
@@ -185,11 +185,10 @@ class DATFile:
         return self._levelset
     
     def __getitem__(self, level_num: int) -> dict[str, list[int]]:
-        # [!?] not 1 index (goodness, no!)
-        # [i] the reason why I decided to do this
-        # [i] is cuz level_num does not represent indexes
-        # [*] plus if you want you can just use the levelset property
-        return self._levelset[level_num - 1]
+        return self._levelset[level_num]
+    
+    def __str__(self) -> str:
+        return str(self._levelset)
                 
     write_file = save_to_file
 
@@ -243,32 +242,9 @@ def string_to_bytetitle(title: str) -> list[int]:
         list[int]: _description_
     """
     
-    def _weird_fullstrip(string: str):
-        '''
-        FIXME
-        '''
-        
-        new_string = ''
-        
-        for index, char in enumerate(string, 0):
-            if index in (0, 22):
-                new_string += char
-            
-            elif char == ' ':
-                if string[index + 1] != ' ' or string[index - 1] != ' ':
-                    new_string += char
-                
-            elif char in (' ', '\n'):
-                continue
-            
-            else:
-                new_string += char
-            
-        return new_string
-    
     FILLCHAR = '-'
 
-    title = title.upper().strip()
+    title = title.upper()
     
     if len(title) > 23:
         raise ValueError("title too long (max 23 characters)")
