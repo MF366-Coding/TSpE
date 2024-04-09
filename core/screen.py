@@ -23,20 +23,18 @@ CUSTOM_BOOLS = CUSTOM_TRUE + CUSTOM_FALSE
 
 
 class InvalidCommand(Exception): ...
-class TooManyArguments(Exception): ...
 class ArgTypeError(TypeError): ...
-class CommandHasBeenBuilt(Exception): ...
 
 
 class Screen:
     '''
-    TODO
+    FIXME
     '''
     
     def __init__(self, data: dict[str, str], colormap: dict[str, str | None], initial_context) -> None:
         self._COLORMAP: dict[str, str | None] = colormap
         self._DATA: dict[str, str] = data
-        self._CONTEXT = initial_context
+        self._cur_context = initial_context
         self._last_cleared: float = time.time()
 
     def newline(self, count: int = 1):
@@ -76,6 +74,21 @@ class Screen:
             self._last_cleared = time.time()
 
         return os.system('cls' if sys.platform == 'win32' else 'clear')
+    
+    def change_context(self, new_context):
+        self._cur_context = new_context
+        self.clear_screen()
+        
+        self.write(str(self._cur_context))
+        
+    def read_command(self, style: dict[str, str]):
+        '''
+        TODO
+        '''
+        
+        self.write(f"{style['COMMAND_BACKGROUND']}{style['COMMAND_FOREGROUND']}>>> ")
+        self.newline()
+            
 
     builtin_print = print
     print, printlines = write, writelines
@@ -237,7 +250,7 @@ class Context:
     def execute_command(self, command: Command, interpreted_args: list[str | bool | int], *args, **kwargs) -> str | Any:
         return command.call_function(*tuple(interpreted_args), *args, **kwargs)
      
-    def interpret_command(self, command_name: str, given_args: list[str]) -> tuple[Command, list[str | bool | int]]:
+    def get_command(self, command_name: str) -> Command:
         input_command: Command | None = None
         
         for command in self._COMMANDS:
@@ -248,9 +261,18 @@ class Context:
         if input_command is None:
             raise InvalidCommand(f"such command doesn't exist - use '{random.choice(('help', 'imlost'))}' for more info")
         
-        interpreted_args: list[str | bool | int] = input_command.interpret_arguments(given_args)
+        return input_command
+    
+    def interpret_command(self, command: str | Command, given_args: list[str]) -> tuple[Command, list[str | bool | int]]:
+        if isinstance(command, str):
+            command = self.get_command(command)
+            
+        elif isinstance(command, Command) and command not in self._COMMANDS:
+            raise InvalidCommand(f"such command doesn't exist in this context but is a valid Command object - use '{random.choice(('help', 'imlost'))}' for more info")
         
-        return input_command, interpreted_args
+        interpreted_args: list[str | bool | int] = command.interpret_arguments(given_args)
+        
+        return command, interpreted_args
     
     @property
     def name(self) -> str:
