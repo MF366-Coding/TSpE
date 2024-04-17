@@ -3,7 +3,7 @@ from core import encoder, screen, supaparse, settings
 # [*] Defining constants for easier and faster access
 CHANGEMELATER = CHANGE_ME_LATER = 'change.me.please'
 
-HORIZONTAL_SEPARATOR: str = chr(9472)
+HORIZONTAL_SEPARATOR: str = '=' * 359
 
 TOP_LEFT_CORNER: str = chr(9556)
 TOP_RIGHT_CORNER: str = chr(9559)
@@ -21,9 +21,12 @@ def int_to_hex_string(n: int) -> str:
 
 
 class Grid:
-    def __init__(self, level_data: dict[str, list[int]], level_num: int = 1, part_of_levelset: bool = False) -> None:
+    def __init__(self, level_data: dict[str, list[int]], level_num: int = 1, part_of_levelset: bool = False, height: int = 24, width: int = 60) -> None:
         self._LEVEL: dict[str, list[int]] = level_data.copy()
         self._GRID: list[int] = self._LEVEL['level']
+        
+        self._WIDTH = width
+        self._HEIGHT = height
         
         if level_num < 10:
             self._level_num: str = f'00{level_num}'
@@ -51,17 +54,15 @@ class Grid:
         FIXME
         '''
         
-        temp: list[str] = [self.convert_display_type(self._GRID[i], CHANGE_ME_LATER).center(2, ' ') + '|' for i in range(24)]
-        aux = temp * 2
+        visual_grid: str = VERTICAL_LINE
         
-        for index, elem in enumerate(temp, 0):
-            if index == 0 or index % 2 == 0:
-                aux[index] = f"║{elem[:-1]}║"
+        for i in range(self._HEIGHT):
+            for _ in range(self._WIDTH):
+                visual_grid += f"{self.convert_display_type(self._GRID[i], CHANGE_ME_LATER).center(5, ' ')}{VERTICAL_LINE}"
                 
-            else:
-                aux[index] = '║================================================================================================================================================================================================================================================║'
-            
-        temp: str = '\n'.join(temp)
+            visual_grid += f'\n║{HORIZONTAL_SEPARATOR}║\n║'
+        
+        visual_grid = '\n'.join(visual_grid.split('\n')[0:-2])
         
         return f"""
 
@@ -69,9 +70,9 @@ LEVEL {self._level_num}: {supaparse.bytes_to_string(self._LEVEL['level_title'])}
 Gravity {'OFF' if not self._LEVEL['initial_gravitation'] else 'ON'} | Frozen Zonks {'ON' if self._LEVEL['initial_freeze_zonks'] == 2 else 'OFF'}
 {CHANGEMELATER} / {self._LEVEL['number_of_infotrons_needed'] if self._LEVEL['number_of_infotrons_needed'] != 0 else CHANGEMELATER} Infotrons | {CHANGEMELATER} Electrons
 {CHANGEMELATER} special ports ─ ╚ ╝ ╔ ╗ ║
-╔================================================================================================================================================================================================================================================╗
-{temp}
-╚================================================================================================================================================================================================================================================╝
+╔{HORIZONTAL_SEPARATOR}╗
+{visual_grid}
+╚{HORIZONTAL_SEPARATOR}╝
 
 
 """
