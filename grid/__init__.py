@@ -59,15 +59,19 @@ class Grid:
                 aux[index] = f"║{elem[:-1]}║"
                 
             else:
-                aux[index] = '================================================================================================================================================================================================================================================'
+                aux[index] = '║================================================================================================================================================================================================================================================║'
             
         temp: str = '\n'.join(temp)
         
         return f"""
-    Level {self._level_num}: {supaparse.bytes_to_string(self._LEVEL['level_title'])}
-    Gravity {'OFF' if not self._LEVEL['initial_gravitation'] else 'ON'} | Frozen Zonks {'ON' if self._LEVEL['initial_freeze_zonks'] == 2 else 'OFF'}
-    {CHANGEMELATER} / {self._LEVEL['number_of_infotrons_needed'] if self._LEVEL['number_of_infotrons_needed'] != 0 else CHANGEMELATER} Infotrons | {CHANGEMELATER} Electrons
-    {CHANGEMELATER} special ports ─ ╚ ╝ ╔ ╗ ║
-    ╔================================================================================================================================================================================================================================================╗
-    
-    """
+
+LEVEL {self._level_num}: {supaparse.bytes_to_string(self._LEVEL['level_title'])}
+Gravity {'OFF' if not self._LEVEL['initial_gravitation'] else 'ON'} | Frozen Zonks {'ON' if self._LEVEL['initial_freeze_zonks'] == 2 else 'OFF'}
+{CHANGEMELATER} / {self._LEVEL['number_of_infotrons_needed'] if self._LEVEL['number_of_infotrons_needed'] != 0 else CHANGEMELATER} Infotrons | {CHANGEMELATER} Electrons
+{CHANGEMELATER} special ports ─ ╚ ╝ ╔ ╗ ║
+╔================================================================================================================================================================================================================================================╗
+{temp}
+╚================================================================================================================================================================================================================================================╝
+
+
+"""
