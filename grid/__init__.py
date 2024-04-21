@@ -6,7 +6,7 @@ class ElementError(Exception): ...
 
 
 # [*] Defining constants for easier and faster access
-CHANGEMELATER = CHANGE_ME_LATER = 'change.me.please'
+CHANGEMELATER = CHANGE_ME_LATER = 'FIXME'
 
 TOP_LEFT_CORNER: str = chr(9556)
 TOP_RIGHT_CORNER: str = chr(9559)
@@ -68,6 +68,14 @@ class Grid:
         items.pop(-1)
         
         return items
+    
+    def change_index(self, x: int, y: int, element: int):
+        '''
+        TODO
+        '''
+        
+        if element > 255:
+            return
     
     def render_grid(self) -> str:
         visual_grid: str = VERTICAL_LINE
