@@ -233,13 +233,13 @@ def string_to_bytetitle(title: str) -> list[int]:
         4. The string has no more than 1 trailing whitespace in each side.
 
     Args:
-        title (str): _description_
+        title (str): the string to convert to bytes - the title of the level
 
     Raises:
-        ValueError: _description_
+        ValueError: the first rule is disrespected
 
     Returns:
-        list[int]: _description_
+        list[int]: a list with bytes that represent the characters 
     """
     
     FILLCHAR = '-'

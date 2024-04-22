@@ -33,13 +33,13 @@ class Grid:
         
         number_of_signs: int = cell_capacity * width + width - 1
         
-        self._CELL_CAPACITY = cell_capacity
+        self._CELL_CAPACITY: int = cell_capacity
         
         self.HORIZONTAL_SEPARATOR: str = '=' * number_of_signs
-        self.HSEP = self.HORIZONTAL_SEPARATOR
+        self.HSEP: str = self.HORIZONTAL_SEPARATOR
         
-        self._WIDTH = width
-        self._HEIGHT = height
+        self._WIDTH: int = width
+        self._HEIGHT: int = height
         
         if level_num < 10:
             self._level_num: str = f'00{level_num}'
@@ -69,10 +69,33 @@ class Grid:
         
         return items
     
+    def revert_grid_back_to_scratch(self):
+        self._GRID = self._LEVEL['level']
+        
+    def save_grid_to_level_mapping(self):
+        self._LEVEL['level'] = self._GRID
+    
     def change_index(self, x: int, y: int, element: int):
         '''
         TODO
         '''
+        
+        matching_index: int = self.get_index_from_coord(x, y)
+        
+        if self._GRID[matching_index] in (13, 14, 15, 16):
+            hi, lo = supaparse.calculate_special_port_hi_lo(x, y)
+            
+            aux: dict[str, list[int]] = self._LEVEL.copy()
+            
+            for key, value in self._LEVEL:
+                if not key.startswith('special_port'):
+                    continue
+                
+                if value[0] == hi and value[1] == lo:
+                    aux[key] = [0] * 6
+                    aux['number_of_special_ports'][0] -= 1
+                    
+        # [!!] to be continued                   
         
         if element > 255:
             return
