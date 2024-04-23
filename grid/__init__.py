@@ -1,8 +1,9 @@
-from core import encoder, screen, supaparse, settings
+from core import encoder, screen, supaparse, settings, exit_program
 
 
 class CapacityError(Exception): ...
 class ElementError(Exception): ...
+class ByteError(Exception): ...
 
 
 # [*] Defining constants for easier and faster access
@@ -26,7 +27,10 @@ def int_to_hex_string(n: int) -> str:
 class Grid:
     def __init__(self, level_data: dict[str, list[int]], level_num: int = 1, cell_capacity: int = 5, part_of_levelset: bool = False, width: int = 60, height: int = 24) -> None:
         self._LEVEL: dict[str, list[int]] = level_data.copy()
-        self._GRID: list[int] = self._LEVEL['level']
+        
+        self._infotrons = self._LEVEL['level'].count(4)
+        self._exits = self._LEVEL['level'].count(7)
+        self._murphies = self._LEVEL['level'].count(3)
         
         if cell_capacity < 3:
             raise CapacityError('the cell capacity for the grid must be higher than 3')
@@ -69,12 +73,6 @@ class Grid:
         
         return items
     
-    def revert_grid_back_to_scratch(self):
-        self._GRID = self._LEVEL['level']
-        
-    def save_grid_to_level_mapping(self):
-        self._LEVEL['level'] = self._GRID
-    
     def change_index(self, x: int, y: int, element: int):
         '''
         TODO
@@ -82,7 +80,13 @@ class Grid:
         
         matching_index: int = self.get_index_from_coord(x, y)
         
-        if self._GRID[matching_index] in (13, 14, 15, 16):
+        if element > 255:
+            raise ByteError("a byte cannot hold a value greater than 255")
+        
+        if element in (13, 14, 15, 16) and self._LEVEL['number_of_special_ports'][0] >= 10:
+            raise ElementError("reached maximum amount of special ports")
+        
+        if self._LEVEL['level'][matching_index] in (13, 14, 15, 16):
             hi, lo = supaparse.calculate_special_port_hi_lo(x, y)
             
             aux: dict[str, list[int]] = self._LEVEL.copy()
@@ -94,18 +98,50 @@ class Grid:
                 if value[0] == hi and value[1] == lo:
                     aux[key] = [0] * 6
                     aux['number_of_special_ports'][0] -= 1
+                
+                self._LEVEL = aux
                     
-        # [!!] to be continued                   
+        elif self._LEVEL['level'][matching_index] == 4:
+            self._infotrons -= 1
         
-        if element > 255:
-            return
+        elif self._LEVEL['level'][matching_index] == 3:
+            self._murphies -= 1
+            
+        elif self._LEVEL['level'][matching_index] == 7:
+            self._exits -= 1
+            
+        if element in (13, 14, 15, 16):
+            hi, lo = supaparse.calculate_special_port_hi_lo(x, y)
+            
+            aux: dict[str, list[int]] = self._LEVEL.copy()
+            
+            for key, value in self._LEVEL:
+                if not key.startswith('special_port'):
+                    continue
+                
+                if value == [0] * 6:
+                    aux[key] = [hi, lo, 0, 0, 0, 0]
+                    aux['number_of_special_ports'][0] += 1
+                
+                self._LEVEL = aux
+                
+        elif element == 4:
+            self._infotrons += 1
+        
+        elif element == 3:
+            self._murphies += 1
+            
+        elif element == 7:
+            self._exits += 1
+            
+        self._LEVEL['level'][matching_index] = element
     
     def render_grid(self) -> str:
         visual_grid: str = VERTICAL_LINE
         
         for i in range(self._HEIGHT):
             for _ in range(self._WIDTH):
-                spam: str = self.convert_display_type(self._GRID[i], CHANGE_ME_LATER).center(self._CELL_CAPACITY, ' ')
+                spam: str = self.convert_display_type(self._LEVEL['level'][i], CHANGE_ME_LATER).center(self._CELL_CAPACITY, ' ')
                 
                 if len(spam) > self._CELL_CAPACITY:
                     raise CapacityError('an element that has a bigger lenght than the capacity was received but is not allowed')
