@@ -32,8 +32,8 @@ class Grid:
         self._exits = self._LEVEL['level'].count(7)
         self._murphies = self._LEVEL['level'].count(3)
         
-        if cell_capacity < 3:
-            raise CapacityError('the cell capacity for the grid must be higher than 3')
+        if cell_capacity < 4:
+            raise CapacityError('the cell capacity for the grid must be higher than 4')
         
         number_of_signs: int = cell_capacity * width + width - 1
         
@@ -74,10 +74,6 @@ class Grid:
         return items
     
     def change_index(self, x: int, y: int, element: int):
-        '''
-        TODO
-        '''
-        
         matching_index: int = self.get_index_from_coord(x, y)
         
         if element > 255:
@@ -135,6 +131,10 @@ class Grid:
             self._exits += 1
             
         self._LEVEL['level'][matching_index] = element
+    
+    @property
+    def level(self) -> dict[str, list[int]]:
+        return self._LEVEL
     
     def render_grid(self) -> str:
         visual_grid: str = VERTICAL_LINE
