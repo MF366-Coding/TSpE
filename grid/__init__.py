@@ -1,4 +1,4 @@
-from core import encoder, screen, supaparse, settings, exit_program
+from core import supaparse
 
 
 class CapacityError(Exception): ...

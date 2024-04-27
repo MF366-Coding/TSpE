@@ -104,9 +104,8 @@ class OptionalArgument(GenericArgument):
 
 
 class Screen:
-    def __init__(self, data: dict[str, str], colormap: dict[str, str | None], initial_context) -> None:
+    def __init__(self, colormap: dict[str, str | None], initial_context) -> None:
         self._COLORMAP: dict[str, str | None] = colormap
-        self._DATA: dict[str, str] = data
         self._cur_context: Context = initial_context
         self._last_cleared: float = time.time()
 
@@ -243,6 +242,7 @@ class Command:
     def __init__(self, name: str, arguments: list[GenericArgument], function: Callable) -> None:
         self._NAME: str = name
         self._ARGS: list[GenericArgument | Argument | OptionalArgument] = arguments
+        
         self._FUNCTION: Callable = function
 
     def call_function(self, *args, **kwargs) -> str | Any:
