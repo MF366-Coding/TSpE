@@ -4,6 +4,10 @@ import os
 from core import screen, settings, supaparse, encoder, exit_program
 import grid
 
+# pylint: disable=W0603
+
+FIXME = grid.CHANGE_ME_LATER
+
 program_data = {
     "ascii": ['MMP""MM""YMM  .M"""bgd        `7MM"""YMM  ',
               'P\'   MM   `7 ,MI    "Y          MM    `7  ',
@@ -53,8 +57,8 @@ def change_directory(path: str):
 
 home_cd_args = [screen.Argument('path')]
 
-home_commands = [screen.Command('cd', home_cd_args)]
-home_scrn = screen.Context('Home Screen')
+home_commands = [screen.Command('cd', home_cd_args, change_directory)]
+home_scrn = screen.Context('Home Screen', home_commands, FIXME)
 
-SCREEN = screen.Screen(PARSER.colormap, )
+SCREEN = screen.Screen(PARSER.colormap, home_scrn)
 
