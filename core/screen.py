@@ -215,7 +215,7 @@ class Screen:
             return
 
         if isinstance(new_state, str):
-            self._cur_context.update_screen(new_state)
+            self._cur_context.update_screen(new_state.replace('!/CURRENTRENDERCONTEXTASISNOCHANGE/', str(self._cur_context)))
             return
         
         else:

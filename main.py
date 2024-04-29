@@ -27,7 +27,7 @@ if len(sys.argv) > 1:
 else:
     PARSER = settings.SettingsParser(os.path.join(os.path.dirname(__file__), 'core', 'settings.json'))
 
-cur_dir = os.getcwd()
+cur_dir: str = os.getcwd()
 
 # [*] Home screen setup
 def change_directory(path: str):
@@ -49,7 +49,7 @@ def change_directory(path: str):
     else:
         cur_dir = path
         
-    ...
+    return f"Working Directory is now set to: {cur_dir}\n!/CURRENTRENDERCONTEXTASISNOCHANGE/"
 
 home_cd_args = [screen.Argument('path')]
 
