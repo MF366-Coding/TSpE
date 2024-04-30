@@ -6,6 +6,10 @@ import grid
 
 # pylint: disable=W0603
 
+# [i] my plans for the next coding sessions are:
+# [*] FINISH THE GODDAMN OUTSIDE FUNCTIONS AND TEST THE DAMN SCREEN!
+# TODO
+
 FIXME = grid.CHANGE_ME_LATER
 
 program_data = {
