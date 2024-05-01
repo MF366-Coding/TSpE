@@ -153,11 +153,13 @@ class Screen:
 
         self.write(str(self._cur_context))
 
-    def read_command(self):
+    def read_command(self) -> None:
         self.write(f"{self._COLORMAP['COMMAND_BACKGROUND']}{self._COLORMAP['COMMAND_FOREGROUND']}>>> ")
         self.newline()
 
         command_name = input()
+
+        self._cur_context.remove_state_infoline()
 
         try:
             command_object: Command = self._cur_context.get_command(command_name)
@@ -293,18 +295,37 @@ class Command:
 
 
 class Context:
-    def __init__(self, name: str, commands: list[Command], initial_scrn_state: str) -> None:
+    def __init__(self, name: str, initial_scrn_state: str, commands: list[Command] = None) -> None:
         self._NAME: str = name
-        self._COMMANDS: list[Command] = commands
+        
+        if commands is None:
+            self._COMMANDS = []
+        
+        else:
+            self._COMMANDS: list[Command] = commands
+        
         self._state: str = initial_scrn_state
+        
+    def add_command(self, command: Command):
+        if command in self._COMMANDS:
+            raise InvalidCommand('command already exists in this context')
+        
+        self._COMMANDS.append(command)
+        
+    def add_several_commands(self, commands: list[Command]):
+        for command in commands:
+            self.add_command(command)
 
-    def update_state(self, new_state: str):
+    def update_state(self, new_state: str) -> None:
         self._state = new_state
 
-    def update_screen(self, update: str):
-        self.update_state(update)
+    def update_screen(self, update: str) -> None:
+        self.update_state(new_state=update)
         SCREEN_INST.clear_screen()
         SCREEN_INST.write(self._state)
+    
+    def remove_state_infoline(self) -> None:
+        self.update_state(new_state=self._state.split('\n', 1)[1])
 
     def execute_command(self, command: Command, interpreted_args: list[str | bool | int], *args, **kwargs) -> str | Any:
         return command.call_function(*tuple(interpreted_args), *args, **kwargs)
@@ -324,12 +345,12 @@ class Context:
 
     def interpret_command(self, command: str | Command, given_args: list[str]) -> tuple[Command, list[str | bool | int]]:
         if isinstance(command, str):
-            command = self.get_command(command)
+            command = self.get_command(command_name=command)
 
         elif isinstance(command, Command) and command not in self._COMMANDS:
             raise InvalidCommand(f"such command doesn't exist in this context but is a valid Command object - use '{random.choice(('help', 'imlost'))}' for more info")
 
-        interpreted_args: list[str | bool | int] = command.interpret_arguments(given_args)
+        interpreted_args: list[str | bool | int] = command.interpret_arguments(given_args=given_args)
 
         return command, interpreted_args
 

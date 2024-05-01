@@ -37,18 +37,17 @@ else:
 
 cur_dir: str = os.getcwd()
 
+home_scrn = screen.Context('Home Screen', FIXME)
+
+
 # [*] Home screen setup
 def change_directory(path: str):
-    '''
-    TODO
-    '''
-    
     global cur_dir
     
     if not os.path.exists(path):
         raise FileNotFoundError('the selected path does not exist')
     
-    elif path == '..':
+    if path == '..':
         cur_dir = os.path.dirname(cur_dir)
     
     elif path == '~':
@@ -57,12 +56,45 @@ def change_directory(path: str):
     else:
         cur_dir = path
         
-    return f"Working Directory is now set to: {cur_dir}\n!/CURRENTRENDERCONTEXTASISNOCHANGE/"
+    return f"Working Directory is now set to: {cur_dir}\n\n!/CURRENTRENDERCONTEXTASISNOCHANGE/"
 
-home_cd_args = [screen.Argument('path')]
 
-home_commands = [screen.Command('cd', home_cd_args, change_directory)]
-home_scrn = screen.Context('Home Screen', home_commands, FIXME)
+def delete_file_or_folder(path: str):
+    if not PARSER.allow_del:
+        raise PermissionError('deleting files/directories from the disk is disabled')
+    
+    exists_as_given: bool = os.path.exists(path)
+    exists_as_joint_path: bool = os.path.exists(os.path.join(cur_dir, path))
+    path_to_remove = False
+    
+    if exists_as_given:
+        path_to_remove = path
+        
+        if os.path.isdir(path_to_remove):
+            os.removedirs(path_to_remove)
+        
+        else:
+            os.remove(path_to_remove)
+            
+    elif exists_as_joint_path:
+        path_to_remove = os.path.join(cur_dir, path)
+        
+        if os.path.isdir(path_to_remove):
+            os.removedirs(path_to_remove)
+        
+        else:
+            os.remove(path_to_remove)
+    
+    else:
+        raise FileNotFoundError('the selected path does not exist')
+    
+    return f"'{path_to_remove}' sucessfully removed!\n\n!/CURRENTRENDERCONTEXTASISNOCHANGE/"
+
+
+home_cd_del_args = [screen.Argument('path')]
+home_commands = [screen.Command('cd', home_cd_del_args, change_directory), screen.Command('delete', home_cd_del_args, delete_file_or_folder), screen.Command('del', home_cd_del_args, delete_file_or_folder)]
+
+home_scrn.add_several_commands(home_commands)
 
 SCREEN = screen.Screen(PARSER.colormap, home_scrn)
 
