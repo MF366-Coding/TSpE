@@ -20,7 +20,7 @@ class SettingsParser:
         self._get_settings()
 
     def force_reload(self, path: str | None = None):
-        self._path = path if path is not None else self._path
+        self._path: str = path if path is not None else self._path
         self._get_settings()
 
     @property

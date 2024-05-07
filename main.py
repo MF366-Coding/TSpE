@@ -1,17 +1,19 @@
 from colorama import Style
 import sys
 import os
+import math
 from core import screen, settings, supaparse, encoder, exit_program
 import grid
 
 # pylint: disable=W0603
+# pylint: disable=W0123
 
 # [i] my plans for the next coding sessions are:
 # [*] FINISH THE GODDAMN OUTSIDE FUNCTIONS AND TEST THE DAMN SCREEN!
 # TODO
 
 
-class ReminderError(Exception): ...
+class TagError(Exception): ...
 
 
 FIXME = grid.CHANGE_ME_LATER
@@ -46,11 +48,11 @@ home_scrn = screen.Context('Home Screen', FIXME)
 
 
 # [*] Home screen setup
-def about_tspe():
+def about_tspe() -> str:
     return f"TSpE - Terminal Supaplex Editor is a backwards-compatible Supaplex level editor made by MF366\n\n{RENDER_CONTEXT}"
 
 
-def change_directory(path: str):
+def change_directory(path: str) -> str:
     global cur_dir
 
     if not os.path.exists(path):
@@ -68,7 +70,7 @@ def change_directory(path: str):
     return f"Working Directory is now set to: {cur_dir}\n\n{RENDER_CONTEXT}"
 
 
-def delete_file_or_folder(path: str):
+def delete_file_or_folder(path: str) -> str:
     if not PARSER.allow_del:
         raise PermissionError('deleting files/directories from the disk is disabled')
 
@@ -77,10 +79,10 @@ def delete_file_or_folder(path: str):
     path_to_remove = False
 
     if exists_as_given:
-        path_to_remove = path
+        path_to_remove: str = path
 
     elif exists_as_joint_path:
-        path_to_remove = os.path.join(cur_dir, path)
+        path_to_remove: str = os.path.join(cur_dir, path)
 
     else:
         raise FileNotFoundError('the selected path does not exist')
@@ -94,13 +96,13 @@ def delete_file_or_folder(path: str):
     return f"'{path_to_remove}' sucessfully removed!\n\n{RENDER_CONTEXT}"
 
 
-def dump_tspe_settings():
+def dump_tspe_settings() -> str:
     PARSER.save_reload()
     return f"Settings loaded!\n\n{RENDER_CONTEXT}"
 
 
 def echo_like_command(what: str, path: str = None):
-    echoed_contents = ' '.join(what.split('\n'))
+    echoed_contents: str = ' '.join(what.split('\n'))
 
     if not path:
         return f"{echoed_contents}\n\n{RENDER_CONTEXT}"
@@ -110,7 +112,7 @@ def echo_like_command(what: str, path: str = None):
     path_to_write = False
 
     if exists_as_given:
-        path_to_write = path
+        path_to_write: str = path
 
     elif exists_as_joint_path:
         path_to_write = os.path.join(cur_dir, path)
@@ -128,16 +130,67 @@ def echo_like_command(what: str, path: str = None):
     return f"Appended contents to {path_to_write}\n\n{RENDER_CONTEXT}"
 
 
-home_cd_del_args = [screen.Argument('path')]
-home_echo_args = [screen.Argument('what'), screen.OptionalArgument('path', '')]
+def evaluate_pythonic_expression(expression: str):
+    if not PARSER.allow_eval:
+        raise PermissionError('evaluating Python expressions is disabled')
+    
+    evaluated_exp = eval(expression, math.__dict__)
+    
+    # [*] Result is bool
+    if evaluated_exp == 0 or evaluated_exp == 1:
+        for char in ('=', '<', '>'):
+            if char not in expression:
+                continue
+            
+            final_exp = bool(evaluated_exp)
+            break
+    
+    # [*] Result is a float but is equal an integer
+    elif isinstance(evaluated_exp, float):
+        if evaluated_exp == int(evaluated_exp):
+            final_exp = int(evaluated_exp)
+            
+    else:
+        final_exp = evaluated_exp
+        
+    return f'Result: {str(final_exp).strip()}\n\n{RENDER_CONTEXT}'
 
-home_commands = [
+
+def change_directory_alternative(tagname: str) -> str:
+    if tagname in ('..', '*', '~'):
+        raise TagError("such tag is not allowed - even if it's on the JSON file, it cannot be accepted by TSpE")
+    
+    try:
+        tagpath: str = PARSER.tags[tagname]
+    
+    except KeyError:
+        tagpath: str = tagname
+        
+    return change_directory(path=tagpath)
+
+
+def reload_tspe_settings() -> str:
+    PARSER.force_reload()
+    return f"Settings have been reloaded!\n\n{RENDER_CONTEXT}"
+      
+
+home_cd_del_args: list[screen.Argument] = [screen.Argument('path')]
+home_echo_args: list[screen.Argument, screen.OptionalArgument] = [screen.Argument('what'), screen.OptionalArgument('path', '')]
+home_eval_args: list[screen.Argument] = [screen.Argument('expression')]
+home_cd_alt_args: list[screen.Argument] = [screen.Argument('tagname')]
+
+home_commands: list[screen.Command] = [
     screen.Command('about', [], about_tspe),
     screen.Command('cd', home_cd_del_args, change_directory),
     screen.Command('delete', home_cd_del_args, delete_file_or_folder),
     screen.Command('del', home_cd_del_args, delete_file_or_folder), # [i] Forgot to implement aliases - too late now - so this is how I'm gonna do it
     screen.Command('dump', [], dump_tspe_settings),
-    screen.Command('echo', home_cd_del_args, echo_like_command)
+    screen.Command('echo', home_cd_del_args, echo_like_command),
+    screen.Command('evaluate', home_eval_args, evaluate_pythonic_expression),
+    screen.Command('eval', home_eval_args, evaluate_pythonic_expression),
+    screen.Command('goto', home_cd_alt_args, change_directory_alternative),
+    screen.Command('go', home_cd_alt_args, change_directory_alternative),
+    screen.Command('load', [], reload_tspe_settings)
 ]
 
 home_scrn.add_several_commands(home_commands)
