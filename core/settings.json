@@ -14,6 +14,7 @@
     },
     "tags": {},
     "testProviders": {},
+    "templates": {},
     "spElems": {
         "0": ["Empty Space", "0", null, false, false],
         "1": ["Zonk", "(-)", null, true, false],
@@ -65,5 +66,7 @@
     "allowEvaluate": false,
     "allowDelete": false,
     "useOnlineHelp": false,
-    "logging": true 
+    "logging": true ,
+    "ignoreWeirdUseOfFileExtensions": true,
+    "cellCapacity": 5
 }

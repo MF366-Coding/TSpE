@@ -4,6 +4,9 @@ supaparse.py
 This module allows you to read, interpret and write to SP and DAT files.
 """
 
+BYTES_PER_SP_FILE = 1536
+BYTES_PER_DAT_FILE = 1536 * 111
+
 
 def get_file_contents_as_bytearray(filename: str) -> bytearray:
     """
@@ -17,7 +20,7 @@ def get_file_contents_as_bytearray(filename: str) -> bytearray:
     """
     
     with open(filename, 'rb') as f:
-        data = bytearray(f.read())[:1536]
+        data = bytearray(f.read())[:BYTES_PER_SP_FILE]
     
     return data
 
@@ -30,7 +33,7 @@ def interpret_sp_data(data: bytearray) -> dict[str, list[int]]:
         data (bytearray): the contents of the SP file
 
     Returns:
-        dict[str, bytearray]: relation key - value, with strings as keys, bytearrays as values
+        dict[str, list[int]]: relation key - value, with strings as keys, lists with integers as values
     """
     
     level: dict[str, list[int]] = {
@@ -116,10 +119,10 @@ class SupaplexLevelsetFile:
             filename (str): levelset path
         """
         
-        self._FILENAME = filename
+        self._FILENAME: str = filename
         self._levelset: list[dict[str, list[int]]] = None
         self.reload_levelset()
-        
+    
     def reload_levelset(self):
         """
         reload_levelset loads and interprets the levelset
@@ -156,8 +159,8 @@ class SupaplexLevelsetFile:
         self._levelset = []
         
         for level_num in range(111):
-            cur_iter = level_num * 1536
-            self._levelset.append(interpret_sp_data(contents[cur_iter:cur_iter + 1536]))
+            cur_iter = level_num * BYTES_PER_SP_FILE
+            self._levelset.append(interpret_sp_data(contents[cur_iter:cur_iter + BYTES_PER_SP_FILE]))
             
     def save_to_file(self, filepath: str):
         """
@@ -191,6 +194,14 @@ class SupaplexLevelsetFile:
         return str(self._levelset)
                 
     write_file = save_to_file
+
+
+def generate_empty_sp_level() -> dict[str, list[int]]:
+    return interpret_sp_data(bytearray([0] * BYTES_PER_SP_FILE))
+
+
+def generate_empty_dat_as_dict() -> dict[str, list[int]]:
+    return interpret_sp_data(bytearray([0] * BYTES_PER_DAT_FILE))
 
 
 def string_to_bytes(string: str) -> list[int]:

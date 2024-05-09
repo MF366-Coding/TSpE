@@ -14,6 +14,7 @@ import grid
 
 
 class TagError(Exception): ...
+class FileExtensionError(Exception): ...
 
 
 FIXME = grid.CHANGE_ME_LATER
@@ -44,7 +45,10 @@ else:
 
 cur_dir: str = os.getcwd()
 
+cur_grid: grid.Grid | None = None
+
 home_scrn = screen.Context('Home Screen', FIXME)
+editor_scrn = screen.Context("Level Editor", FIXME)
 
 
 # [*] Home screen setup
@@ -172,12 +176,32 @@ def change_directory_alternative(tagname: str) -> str:
 def reload_tspe_settings() -> str:
     PARSER.force_reload()
     return f"Settings have been reloaded!\n\n{RENDER_CONTEXT}"
-      
+
+
+def new_level_on_editor(path: str, template_name: str = 'BLANK') -> screen.Context:
+    global cur_grid
+    
+    if not path.lower().endswith('.sp') and not PARSER.allow_weird_extensions:
+        raise FileExtensionError('weird use of file extension - should be SP (to always ignore this error, change "ignoreWeirdUseOfFileExtensions" in settings to true)')
+    
+    if template_name not in PARSER.templates:
+        level_details: dict[str, list[int]] = supaparse.generate_empty_sp_level()
+        
+    else:
+        template_contents: bytearray = supaparse.get_file_contents_as_bytearray(PARSER.templates[template_name])
+        level_details: dict[str, list[int]] = supaparse.interpret_sp_data(template_contents)
+    
+    cur_grid = grid.Grid(level_details, PARSER.supaplex_element_database, PARSER.element_display_type, PARSER.grid_cell_capacity, 1)
+    editor_scrn.update_state(cur_grid.render_grid())
+    
+    return editor_scrn
+    
 
 home_cd_del_args: list[screen.Argument] = [screen.Argument('path')]
 home_echo_args: list[screen.Argument, screen.OptionalArgument] = [screen.Argument('what'), screen.OptionalArgument('path', '')]
 home_eval_args: list[screen.Argument] = [screen.Argument('expression')]
 home_cd_alt_args: list[screen.Argument] = [screen.Argument('tagname')]
+home_new_level_args: list[screen.Argument, screen.OptionalArgument] = [screen.Argument('path'), screen.OptionalArgument('template_name', 'BLANK')]
 
 home_commands: list[screen.Command] = [
     screen.Command('about', [], about_tspe),
@@ -190,7 +214,10 @@ home_commands: list[screen.Command] = [
     screen.Command('eval', home_eval_args, evaluate_pythonic_expression),
     screen.Command('goto', home_cd_alt_args, change_directory_alternative),
     screen.Command('go', home_cd_alt_args, change_directory_alternative),
-    screen.Command('load', [], reload_tspe_settings)
+    screen.Command('load', [], reload_tspe_settings),
+    screen.Command('new', home_new_level_args, new_level_on_editor),
+    screen.Command('n', home_new_level_args, new_level_on_editor),
+    screen.Command('nl', home_new_level_args, new_level_on_editor)
 ]
 
 home_scrn.add_several_commands(home_commands)

@@ -25,12 +25,26 @@ def int_to_hex_string(n: int) -> str:
 
 
 class Grid:
-    def __init__(self, level_data: dict[str, list[int]], level_num: int = 1, cell_capacity: int = 5, part_of_levelset: bool = False, width: int = 60, height: int = 24) -> None:
+    def __init__(self, level_data: dict[str, list[int]], element_db: dict[str, list[str, str, None | bool, bool | None, bool | None]], display_type: str | int = 0, cell_capacity: int = 5, level_num: int = 1, width: int = 60, height: int = 24) -> None:
+        """
+        __init__ setups the Grid
+
+        Args:
+            level_data (dict[str, list[int]]): the actual level contents
+            cell_capacity (int, optional): how many characters are allowed per grid cell. Defaults to 5, minimum allowed is 4.
+            level_num (int, optional): purely visual, used as an indicator when dealing with levels inside levelsets. Defaults to 1.
+            width (int, optional): the level's width. Backwards compatible levels (SP levels) must have 60 as width. Defaults to 60.
+            height (int, optional): the level's height. Backwards compatible levels (SP levels) must have 24 as height. Defaults to 24.
+
+        Raises:
+            CapacityError: the cell capacity for the grid is lower than 4
+        """
+        
         self._LEVEL: dict[str, list[int]] = level_data.copy()
         
-        self._infotrons = self._LEVEL['level'].count(4)
-        self._exits = self._LEVEL['level'].count(7)
-        self._murphies = self._LEVEL['level'].count(3)
+        self._infotrons: int = self._LEVEL['level'].count(4)
+        self._exits: int = self._LEVEL['level'].count(7)
+        self._murphies: int = self._LEVEL['level'].count(3)
         
         if cell_capacity < 4:
             raise CapacityError('the cell capacity for the grid must be higher than 4')
@@ -53,6 +67,18 @@ class Grid:
             
         else:
             self._level_num: str = str(level_num)
+        
+        match display_type:
+            case 'hex' | 'hexadecimal' | 1:
+                self._ELEM_DISPLAY_TYPE = 'hexadecimal'
+            
+            case 'symbol' | 2:
+                self._ELEM_DISPLAY_TYPE = 'symbol'
+                
+            case _:
+                self._ELEM_DISPLAY_TYPE = 'integer'
+                
+        self._ELEM_DATABASE = element_db
             
     def get_index_from_coord(self, x: int, y: int) -> int:
         return x * self._WIDTH + y
@@ -73,7 +99,7 @@ class Grid:
         
         return items
     
-    def change_index(self, x: int, y: int, element: int):
+    def change_index(self, x: int, y: int, element: int) -> None:
         matching_index: int = self.get_index_from_coord(x, y)
         
         if element > 255:
@@ -141,7 +167,7 @@ class Grid:
         
         for i in range(self._HEIGHT):
             for _ in range(self._WIDTH):
-                spam: str = self.convert_display_type(self._LEVEL['level'][i], CHANGE_ME_LATER).center(self._CELL_CAPACITY, ' ')
+                spam: str = self.convert_display_type(element=self._LEVEL['level'][i]).center(self._CELL_CAPACITY, ' ')
                 
                 if len(spam) > self._CELL_CAPACITY:
                     raise CapacityError('an element that has a bigger lenght than the capacity was received but is not allowed')
@@ -165,16 +191,16 @@ Gravity {'OFF' if not self._LEVEL['initial_gravitation'] else 'ON'} | Frozen Zon
 
 """
 
-    def convert_display_type(self, element: int, display_type: str, element_config: list[str, str, None | bool, bool | None, bool | None] = None) -> str:
-        match display_type:
+    def convert_display_type(self, element: int) -> str:
+        match self._ELEM_DISPLAY_TYPE:
             case 'hexadecimal' | 'hex':
-                return int_to_hex_string(element)
+                return int_to_hex_string(n=element)
             
             case 'symbol':
-                if element_config is None or element_config[1] is None:
+                if self._ELEM_DATABASE is None or self._ELEM_DATABASE[element] is None or self._ELEM_DATABASE[element][1] is None:
                     raise ElementError('the element\'s symbol is set to None')
                 
-                return element_config[1]
+                return self._ELEM_DATABASE[element][1]
             
             case _:
                 return str(element)
