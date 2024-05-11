@@ -1,4 +1,5 @@
 from colorama import Style
+import simple_webbrowser
 import sys
 import os
 import math
@@ -197,6 +198,38 @@ def new_level_on_editor(path: str, template_name: str = 'BLANK') -> screen.Conte
     return editor_scrn
     
 
+def open_level_on_editor(path: str) -> screen.Context:
+    global cur_grid
+    
+    if not path.lower().endswith('.sp') and not PARSER.allow_weird_extensions:
+        raise FileExtensionError('weird use of file extension - should be SP (to always ignore this error, change "ignoreWeirdUseOfFileExtensions" in settings to true)')
+
+    exists_as_given: bool = os.path.exists(path)
+    exists_as_joint_path: bool = os.path.exists(os.path.join(cur_dir, path))
+    path_to_open = False
+
+    if exists_as_given:
+        path_to_open: str = path
+
+    elif exists_as_joint_path:
+        path_to_open: str = os.path.join(cur_dir, path)
+        
+    else:
+        raise FileNotFoundError("is the path correct?")
+    
+    level_details: dict[str, list[int]] = supaparse.interpret_sp_data(supaparse.get_file_contents_as_bytearray(path_to_open))
+    
+    cur_grid = grid.Grid(level_details, PARSER.supaplex_element_database, PARSER.element_display_type, PARSER.grid_cell_capacity, 1)
+    editor_scrn.update_state(cur_grid.render_grid())
+    
+    return editor_scrn
+
+
+def open_spfix_documentation() -> str:
+    simple_webbrowser.website("https://github.com/MF366-Coding/The-Ultimate-Supaplex-Archive/blob/d04be7b765bb9c50a9eb014527aef688fc483556/Supaplex_Stuff/Documentation/SPFIX63a.pdf")
+    return RENDER_CONTEXT
+
+
 home_cd_del_args: list[screen.Argument] = [screen.Argument('path')]
 home_echo_args: list[screen.Argument, screen.OptionalArgument] = [screen.Argument('what'), screen.OptionalArgument('path', '')]
 home_eval_args: list[screen.Argument] = [screen.Argument('expression')]
@@ -217,7 +250,11 @@ home_commands: list[screen.Command] = [
     screen.Command('load', [], reload_tspe_settings),
     screen.Command('new', home_new_level_args, new_level_on_editor),
     screen.Command('n', home_new_level_args, new_level_on_editor),
-    screen.Command('nl', home_new_level_args, new_level_on_editor)
+    screen.Command('nl', home_new_level_args, new_level_on_editor),
+    screen.Command('open', home_cd_del_args, open_level_on_editor),
+    screen.Command('o', home_cd_del_args, open_level_on_editor),
+    screen.Command('ol', home_cd_del_args, open_level_on_editor),
+    screen.Command('spfix', [], open_spfix_documentation)
 ]
 
 home_scrn.add_several_commands(home_commands)
