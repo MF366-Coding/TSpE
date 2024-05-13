@@ -93,7 +93,7 @@ def delete_file_or_folder(path: str) -> str:
         raise FileNotFoundError('the selected path does not exist')
 
     if os.path.isdir(path_to_remove):
-            os.removedirs(path_to_remove)
+        os.removedirs(path_to_remove)
 
     else:
         os.remove(path_to_remove)
@@ -126,7 +126,7 @@ def echo_like_command(what: str, path: str = None):
         raise FileNotFoundError('the selected path does not exist')
 
     if not os.path.isfile(path_to_write):
-            raise BufferError("can't write to an object that isn't a file")
+        raise BufferError("can't write to an object that isn't a file")
 
     else:
         with open(path_to_write, 'a', encoding='\n') as f:
