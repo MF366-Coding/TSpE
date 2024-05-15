@@ -16,10 +16,12 @@ import grid
 
 class TagError(Exception): ...
 class FileExtensionError(Exception): ...
+class SupaplexStructureError(Exception): ...
 
 
 FIXME = grid.CHANGE_ME_LATER
 RENDER_CONTEXT = '!/CURRENTRENDERCONTEXTASISNOCHANGE/'
+DEFAULT_PLACEHOLDER = "default.value.placeholder.check.for.existing.value"
 
 program_data = {
     "ascii": ['MMP""MM""YMM  .M"""bgd        `7MM"""YMM  ',
@@ -228,6 +230,43 @@ def open_level_on_editor(path: str) -> screen.Context:
 def open_spfix_documentation() -> str:
     simple_webbrowser.website("https://github.com/MF366-Coding/The-Ultimate-Supaplex-Archive/blob/d04be7b765bb9c50a9eb014527aef688fc483556/Supaplex_Stuff/Documentation/SPFIX63a.pdf")
     return RENDER_CONTEXT
+
+
+
+# [*] Editor/Grid Commands
+def edit_level_properties(infotrons: int = -1, gravity: bool | int = -1, frozen_zonks: bool | int = -1, level_name: str = "default.name.placeholder.check.for.existing.name") -> str:
+    if infotrons > 255:
+        raise SupaplexStructureError("max number of needed infotrons mustn't exceed 255")
+    
+    if infotrons >= 0:
+        cur_grid.level['number_of_infotrons_needed'] = infotrons
+        
+    if gravity >= 0:
+        gravity = supaparse.clamp_value(gravity, 0, 8)
+        cur_grid.level['initial_gravitation'] = [gravity]
+        
+    if frozen_zonks >= 0:
+        if frozen_zonks > 2:
+            frozen_zonks = 0
+        
+        frozen_zonks = supaparse.clamp_value(frozen_zonks, 1, 2)
+        cur_grid.level['initial_freeze_zonks'] = [frozen_zonks]
+        
+    if level_name != DEFAULT_PLACEHOLDER:
+        bytetitle: list[int] = supaparse.string_to_bytetitle(level_name)
+        cur_grid.level['level_title'] = bytetitle
+        
+    return f"Changes applied!\n\n{cur_grid.render_grid()}"
+
+
+def change_level_borders(new_item: int):
+    '''
+    FIXME
+    '''
+    
+    # /-/ border_up = cur_grid.get_index_from_selection(0, 59, 0, 23)
+    # /-/ border_down = cur_grid.get_index_from_selection(0, 59, )
+    pass
 
 
 home_cd_del_args: list[screen.Argument] = [screen.Argument('path')]

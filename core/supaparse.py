@@ -281,3 +281,13 @@ def calculate_special_port_hi_lo(x: int, y: int) -> tuple[int, int]:
     lo = int(value % 256)
     
     return hi, lo
+
+
+def clamp_value(value: int | float, minimum: int | float, maximum: int | float) -> int | float:
+    if value < minimum:
+        return minimum
+    
+    if value > maximum:
+        return maximum
+    
+    return value
