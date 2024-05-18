@@ -79,28 +79,32 @@ class Grid:
                 self._ELEM_DISPLAY_TYPE = 'integer'
                 
         self._ELEM_DATABASE = element_db
-            
+    
+    def get_coord_from_index(self, index: int) -> tuple[int, int]:
+        y, x = divmod(index, self._WIDTH)
+        return x, y
+    
     def get_index_from_coord(self, x: int, y: int) -> int:
-        return x * self._WIDTH + y
+        return y * self._WIDTH + x
 
-    def get_index_from_selection(self, x1: int, x2: int, y1: int, y2: int) -> list[int]:
-        items: list[int] = [self.get_index_from_coord(x1, y1)]
+    def get_index_from_selection(self, x1: int, y1: int, x2: int, y2: int) -> list[int]:
+        items: list[int] = []
         
-        for _ in range(self._WIDTH // (x2 - x1)):
-            if items[-1] >= self.get_index_from_coord(x2, y2):
-                break
+        column_spacing = x2 - x1 + 1
+        line_spacing = y2 - y1 + 1
         
-            for _ in range(y2 - y1):
-                items.append(items[-1] + 1)
+        for i in range(line_spacing):
+            if i != 0:
+                if items[-1] == self.get_index_from_coord(x2, y2):
+                    break
                 
-            items.append(items[-(y2 - y1) - 1] + self._WIDTH)
-        
-        items.pop(-1)
+            for j in range(column_spacing):
+                items.append(self.get_index_from_coord(j + x1, i + y1))
         
         return items
     
-    def change_index(self, x: int, y: int, element: int) -> None:
-        matching_index: int = self.get_index_from_coord(x, y)
+    def change_element_by_index(self, index: int, element: int) -> None:
+        x, y = self.get_coord_from_index(index)
         
         if element > 255:
             raise ByteError("a byte cannot hold a value greater than 255")
@@ -108,7 +112,7 @@ class Grid:
         if element in (13, 14, 15, 16) and self._LEVEL['number_of_special_ports'][0] >= 10:
             raise ElementError("reached maximum amount of special ports")
         
-        if self._LEVEL['level'][matching_index] in (13, 14, 15, 16):
+        if self._LEVEL['level'][index] in (13, 14, 15, 16):
             hi, lo = supaparse.calculate_special_port_hi_lo(x, y)
             
             aux: dict[str, list[int]] = self._LEVEL.copy()
@@ -123,13 +127,13 @@ class Grid:
                 
                 self._LEVEL = aux
                     
-        elif self._LEVEL['level'][matching_index] == 4:
+        elif self._LEVEL['level'][index] == 4:
             self._infotrons -= 1
         
-        elif self._LEVEL['level'][matching_index] == 3:
+        elif self._LEVEL['level'][index] == 3:
             self._murphies -= 1
             
-        elif self._LEVEL['level'][matching_index] == 7:
+        elif self._LEVEL['level'][index] == 7:
             self._exits -= 1
             
         if element in (13, 14, 15, 16):
@@ -156,7 +160,12 @@ class Grid:
         elif element == 7:
             self._exits += 1
             
-        self._LEVEL['level'][matching_index] = element
+        self._LEVEL['level'][index] = element
+    
+    def change_element_by_coordinate(self, x: int, y: int, element: int) -> None:
+        matching_index: int = self.get_index_from_coord(x, y)
+        
+        self.change_element_by_index(matching_index, element)
     
     @property
     def level(self) -> dict[str, list[int]]:

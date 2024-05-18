@@ -260,13 +260,15 @@ def edit_level_properties(infotrons: int = -1, gravity: bool | int = -1, frozen_
 
 
 def change_level_borders(new_item: int):
-    '''
-    FIXME
-    '''
+    border_up: list[int] = cur_grid.get_index_from_selection(x1=0, y1=0, x2=59, y2=0)
+    border_down: list[int] = cur_grid.get_index_from_selection(x1=0, y1=23, x2=59, y2=23)
+    border_left: list[int] = cur_grid.get_index_from_selection(x1=0, y1=0, x2=0, y2=23)
+    border_right: list[int] = cur_grid.get_index_from_selection(x1=59, y1=0, x2=59, y2=23)
     
-    # /-/ border_up = cur_grid.get_index_from_selection(0, 59, 0, 23)
-    # /-/ border_down = cur_grid.get_index_from_selection(0, 59, )
-    pass
+    for index in border_down + border_left + border_right + border_up:
+        cur_grid.change_element_by_index(index, new_item)
+    
+    return f"Done!\n\n{cur_grid.render_grid()}"
 
 
 home_cd_del_args: list[screen.Argument] = [screen.Argument('path')]
