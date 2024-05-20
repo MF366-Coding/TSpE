@@ -259,7 +259,7 @@ def edit_level_properties(infotrons: int = -1, gravity: bool | int = -1, frozen_
     return f"Changes applied!\n\n{cur_grid.render_grid()}"
 
 
-def change_level_borders(new_item: int):
+def change_level_borders(new_item: int) -> str:
     border_up: list[int] = cur_grid.get_index_from_selection(x1=0, y1=0, x2=59, y2=0)
     border_down: list[int] = cur_grid.get_index_from_selection(x1=0, y1=23, x2=59, y2=23)
     border_left: list[int] = cur_grid.get_index_from_selection(x1=0, y1=0, x2=0, y2=23)
@@ -269,6 +269,72 @@ def change_level_borders(new_item: int):
         cur_grid.change_element_by_index(index, new_item)
     
     return f"Done!\n\n{cur_grid.render_grid()}"
+
+
+def change_item_in_grid(x: int, y: int, new_item: int) -> str:
+    if x > 59:
+        raise ValueError('X value cannot be greater than 59')
+    
+    if y > 23:
+        raise ValueError('Y value cannot be greater than 23')
+    
+    if x < 0:
+        raise ValueError('X value cannot be lower than 0')
+    
+    if y < 0:
+        raise ValueError('Y value cannot be lower than 0')
+    
+    cur_grid.change_element_by_coordinate(x, y, new_item)
+    
+    return f"Item at ({x}, {y}) changed to {new_item} sucessfully\n\n{cur_grid.render_grid()}"
+
+
+def change_grid_with_checkers_pattern(x1: int, y1: int, x2: int, y2: int, item_1: int, item_2: int) -> str:
+    if x1 > 59 or x2 > 59:
+        raise ValueError('X values cannot be greater than 59')
+    
+    if y1 > 23 or y2 > 23:
+        raise ValueError('Y values cannot be greater than 23')
+    
+    if x1 < 0 or x2 < 0:
+        raise ValueError('X values cannot be lower than 0')
+    
+    if y1 < 0 or y2 < 0:
+        raise ValueError('Y values cannot be lower than 0')
+    
+    selection_table: list[int] = cur_grid.get_index_from_selection(x1, y1, x2, y2)
+    
+    for num, index in enumerate(selection_table, 0):
+        if num == 0 or num % 2 == 0:
+            item = item_1
+            
+        else:
+            item = item_2
+        
+        cur_grid.change_element_by_index(index, item)
+        
+    return f"Checkers board recreated at ({x1}, {y1}) - ({x2}, {y2}) using elements {item_1} and {item_2}.\n\n{cur_grid.render_grid()}"
+    
+
+def fill_square_area(x1: int, y1: int, x2: int, y2: int, item: int) -> str:
+    if x1 > 59 or x2 > 59:
+        raise ValueError('X values cannot be greater than 59')
+    
+    if y1 > 23 or y2 > 23:
+        raise ValueError('Y values cannot be greater than 23')
+    
+    if x1 < 0 or x2 < 0:
+        raise ValueError('X values cannot be lower than 0')
+    
+    if y1 < 0 or y2 < 0:
+        raise ValueError('Y values cannot be lower than 0')
+    
+    selection_table: list[int] = cur_grid.get_index_from_selection(x1, y1, x2, y2)
+    
+    for index in selection_table:        
+        cur_grid.change_element_by_index(index, item)
+        
+    return f"Filled selection ({x1}, {y1}) - ({x2}, {y2}) with element {item} sucessfully.\n\n{cur_grid.render_grid()}"
 
 
 home_cd_del_args: list[screen.Argument] = [screen.Argument('path')]
@@ -296,6 +362,10 @@ home_commands: list[screen.Command] = [
     screen.Command('o', home_cd_del_args, open_level_on_editor),
     screen.Command('ol', home_cd_del_args, open_level_on_editor),
     screen.Command('spfix', [], open_spfix_documentation)
+]
+
+editor_commands = [
+    screen.Command("attributes", FIXME, FIXME),
 ]
 
 home_scrn.add_several_commands(home_commands)

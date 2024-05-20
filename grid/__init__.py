@@ -90,6 +90,12 @@ class Grid:
     def get_index_from_selection(self, x1: int, y1: int, x2: int, y2: int) -> list[int]:
         items: list[int] = []
         
+        if x1 > x2:
+            raise ValueError('x2 must be lower than x1')
+        
+        if y1 > y2:
+            raise ValueError('y2 must be lower than y1')
+        
         column_spacing = x2 - x1 + 1
         line_spacing = y2 - y1 + 1
         
