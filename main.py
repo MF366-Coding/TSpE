@@ -62,17 +62,28 @@ def about_tspe() -> str:
 def change_directory(path: str) -> str:
     global cur_dir
 
-    if not os.path.exists(path):
-        raise FileNotFoundError('the selected path does not exist')
-
     if path == '..':
         cur_dir = os.path.dirname(cur_dir)
+        return f"Working Directory is now set to: {cur_dir}\n\n{RENDER_CONTEXT}"
 
-    elif path == '~':
+    if path == '~':
         cur_dir = os.path.expanduser('~')
+        return f"Working Directory is now set to: {cur_dir}\n\n{RENDER_CONTEXT}"
+
+    exists_as_given: bool = os.path.exists(path)
+    exists_as_joint_path: bool = os.path.exists(os.path.join(cur_dir, path))
+    path_to_change_to = False
+
+    if exists_as_given:
+        path_to_change_to: str = path
+
+    elif exists_as_joint_path:
+        path_to_change_to: str = os.path.join(cur_dir, path)
 
     else:
-        cur_dir = path
+        raise FileNotFoundError('the selected path does not exist')
+
+    cur_dir = path
 
     return f"Working Directory is now set to: {cur_dir}\n\n{RENDER_CONTEXT}"
 
@@ -140,39 +151,39 @@ def echo_like_command(what: str, path: str = None):
 def evaluate_pythonic_expression(expression: str):
     if not PARSER.allow_eval:
         raise PermissionError('evaluating Python expressions is disabled')
-    
+
     evaluated_exp = eval(expression, math.__dict__)
-    
+
     # [*] Result is bool
     if evaluated_exp == 0 or evaluated_exp == 1:
         for char in ('=', '<', '>'):
             if char not in expression:
                 continue
-            
+
             final_exp = bool(evaluated_exp)
             break
-    
+
     # [*] Result is a float but is equal an integer
     elif isinstance(evaluated_exp, float):
         if evaluated_exp == int(evaluated_exp):
             final_exp = int(evaluated_exp)
-            
+
     else:
         final_exp = evaluated_exp
-        
+
     return f'Result: {str(final_exp).strip()}\n\n{RENDER_CONTEXT}'
 
 
 def change_directory_alternative(tagname: str) -> str:
     if tagname in ('..', '*', '~'):
         raise TagError("such tag is not allowed - even if it's on the JSON file, it cannot be accepted by TSpE")
-    
+
     try:
         tagpath: str = PARSER.tags[tagname]
-    
+
     except KeyError:
         tagpath: str = tagname
-        
+
     return change_directory(path=tagpath)
 
 
@@ -183,26 +194,26 @@ def reload_tspe_settings() -> str:
 
 def new_level_on_editor(path: str, template_name: str = 'BLANK') -> screen.Context:
     global cur_grid
-    
+
     if not path.lower().endswith('.sp') and not PARSER.allow_weird_extensions:
         raise FileExtensionError('weird use of file extension - should be SP (to always ignore this error, change "ignoreWeirdUseOfFileExtensions" in settings to true)')
-    
+
     if template_name not in PARSER.templates:
         level_details: dict[str, list[int]] = supaparse.generate_empty_sp_level()
-        
+
     else:
         template_contents: bytearray = supaparse.get_file_contents_as_bytearray(PARSER.templates[template_name])
         level_details: dict[str, list[int]] = supaparse.interpret_sp_data(template_contents)
-    
+
     cur_grid = grid.Grid(level_details, PARSER.supaplex_element_database, PARSER.element_display_type, PARSER.grid_cell_capacity, 1)
     editor_scrn.update_state(cur_grid.render_grid())
-    
+
     return editor_scrn
-    
+
 
 def open_level_on_editor(path: str) -> screen.Context:
     global cur_grid
-    
+
     if not path.lower().endswith('.sp') and not PARSER.allow_weird_extensions:
         raise FileExtensionError('weird use of file extension - should be SP (to always ignore this error, change "ignoreWeirdUseOfFileExtensions" in settings to true)')
 
@@ -215,15 +226,15 @@ def open_level_on_editor(path: str) -> screen.Context:
 
     elif exists_as_joint_path:
         path_to_open: str = os.path.join(cur_dir, path)
-        
+
     else:
         raise FileNotFoundError("is the path correct?")
-    
+
     level_details: dict[str, list[int]] = supaparse.interpret_sp_data(supaparse.get_file_contents_as_bytearray(path_to_open))
-    
+
     cur_grid = grid.Grid(level_details, PARSER.supaplex_element_database, PARSER.element_display_type, PARSER.grid_cell_capacity, 1)
     editor_scrn.update_state(cur_grid.render_grid())
-    
+
     return editor_scrn
 
 
@@ -237,25 +248,25 @@ def open_spfix_documentation() -> str:
 def edit_level_properties(infotrons: int = -1, gravity: bool | int = -1, frozen_zonks: bool | int = -1, level_name: str = "default.name.placeholder.check.for.existing.name") -> str:
     if infotrons > 255:
         raise SupaplexStructureError("max number of needed infotrons mustn't exceed 255")
-    
+
     if infotrons >= 0:
         cur_grid.level['number_of_infotrons_needed'] = infotrons
-        
+
     if gravity >= 0:
         gravity = supaparse.clamp_value(gravity, 0, 8)
         cur_grid.level['initial_gravitation'] = [gravity]
-        
+
     if frozen_zonks >= 0:
         if frozen_zonks > 2:
             frozen_zonks = 0
-        
+
         frozen_zonks = supaparse.clamp_value(frozen_zonks, 1, 2)
         cur_grid.level['initial_freeze_zonks'] = [frozen_zonks]
-        
+
     if level_name != DEFAULT_PLACEHOLDER:
         bytetitle: list[int] = supaparse.string_to_bytetitle(level_name)
         cur_grid.level['level_title'] = bytetitle
-        
+
     return f"Changes applied!\n\n{cur_grid.render_grid()}"
 
 
@@ -264,77 +275,113 @@ def change_level_borders(new_item: int) -> str:
     border_down: list[int] = cur_grid.get_index_from_selection(x1=0, y1=23, x2=59, y2=23)
     border_left: list[int] = cur_grid.get_index_from_selection(x1=0, y1=0, x2=0, y2=23)
     border_right: list[int] = cur_grid.get_index_from_selection(x1=59, y1=0, x2=59, y2=23)
-    
+
     for index in border_down + border_left + border_right + border_up:
         cur_grid.change_element_by_index(index, new_item)
-    
+
     return f"Done!\n\n{cur_grid.render_grid()}"
 
 
 def change_item_in_grid(x: int, y: int, new_item: int) -> str:
     if x > 59:
         raise ValueError('X value cannot be greater than 59')
-    
+
     if y > 23:
         raise ValueError('Y value cannot be greater than 23')
-    
+
     if x < 0:
         raise ValueError('X value cannot be lower than 0')
-    
+
     if y < 0:
         raise ValueError('Y value cannot be lower than 0')
-    
+
     cur_grid.change_element_by_coordinate(x, y, new_item)
-    
+
     return f"Item at ({x}, {y}) changed to {new_item} sucessfully\n\n{cur_grid.render_grid()}"
 
 
 def change_grid_with_checkers_pattern(x1: int, y1: int, x2: int, y2: int, item_1: int, item_2: int) -> str:
     if x1 > 59 or x2 > 59:
         raise ValueError('X values cannot be greater than 59')
-    
+
     if y1 > 23 or y2 > 23:
         raise ValueError('Y values cannot be greater than 23')
-    
+
     if x1 < 0 or x2 < 0:
         raise ValueError('X values cannot be lower than 0')
-    
+
     if y1 < 0 or y2 < 0:
         raise ValueError('Y values cannot be lower than 0')
-    
+
     selection_table: list[int] = cur_grid.get_index_from_selection(x1, y1, x2, y2)
-    
+
     for num, index in enumerate(selection_table, 0):
         if num == 0 or num % 2 == 0:
             item = item_1
-            
+
         else:
             item = item_2
-        
+
         cur_grid.change_element_by_index(index, item)
-        
+
     return f"Checkers board recreated at ({x1}, {y1}) - ({x2}, {y2}) using elements {item_1} and {item_2}.\n\n{cur_grid.render_grid()}"
-    
+
 
 def fill_square_area(x1: int, y1: int, x2: int, y2: int, item: int) -> str:
     if x1 > 59 or x2 > 59:
         raise ValueError('X values cannot be greater than 59')
-    
+
     if y1 > 23 or y2 > 23:
         raise ValueError('Y values cannot be greater than 23')
-    
+
     if x1 < 0 or x2 < 0:
         raise ValueError('X values cannot be lower than 0')
-    
+
     if y1 < 0 or y2 < 0:
         raise ValueError('Y values cannot be lower than 0')
-    
+
     selection_table: list[int] = cur_grid.get_index_from_selection(x1, y1, x2, y2)
-    
-    for index in selection_table:        
+
+    for index in selection_table:
         cur_grid.change_element_by_index(index, item)
-        
+
     return f"Filled selection ({x1}, {y1}) - ({x2}, {y2}) with element {item} sucessfully.\n\n{cur_grid.render_grid()}"
+
+
+def erase_grid_entry(x: int, y: int) -> str:
+    cur_grid.change_element_by_coordinate(x, y, 0)
+    return f"Erased ({x}, {y}) sucessfully\n\n{cur_grid.render_grid()}"
+
+
+def fill_grid_with_elem(element: int):
+    return fill_square_area(1, 1, 58, 22, element)
+
+
+def fill_grid_with_elem_alt(element: int):
+    return fill_square_area(0, 0, 59, 23, element)
+
+
+def look_for_element_occurence(element: int, skip_counter: int = 0):
+    item_coords: tuple[int, int] | None = None
+
+    for index in range(supaparse.BYTES_PER_SP_LEVEL_DATA):
+        if skip_counter <= 0:
+            break
+        
+        if cur_grid.level['level'][index] != element:
+            continue
+
+        if cur_grid.level['level'][index] == element:            
+            if skip_counter > 0:
+                skip_counter -= 1
+                continue
+
+            item_coords = cur_grid.get_coord_from_index(index)
+            
+    if item_coords is None:
+        return f"Element #{element} not found\n\n{cur_grid.render_grid()}"
+    
+    return f"Element #{element} found at ({item_coords[0]}, {item_coords[1]})\n\n{cur_grid.render_grid()}"
 
 
 home_cd_del_args: list[screen.Argument] = [screen.Argument('path')]
@@ -364,8 +411,19 @@ home_commands: list[screen.Command] = [
     screen.Command('spfix', [], open_spfix_documentation)
 ]
 
-editor_commands = [
-    screen.Command("attributes", FIXME, FIXME),
+level_attributes_args: list[screen.OptionalArgument] = [screen.OptionalArgument('infotrons', -1, 'int'), screen.OptionalArgument('gravity', -1, 'bool'), screen.OptionalArgument('frozen_zonks', -1, 'bool'), screen.OptionalArgument('level_name', DEFAULT_PLACEHOLDER)]
+editor_change_args: list[screen.Argument] = [screen.Argument('x', 'int'), screen.Argument('y', 'int'), screen.Argument('new_item', 'int')]
+
+editor_commands: list[screen.Command] = [
+    screen.Command("attributes", level_attributes_args, edit_level_properties),
+    screen.Command("attrs", level_attributes_args, edit_level_properties),
+    screen.Command("at", level_attributes_args, edit_level_properties),
+    screen.Command("@", level_attributes_args, edit_level_properties),
+    screen.Command('borders', [screen.Argument('new_item', 'int')], change_level_borders),
+    screen.Command('outline', [screen.Argument('new_item', 'int')], change_level_borders),
+    screen.Command('change', editor_change_args, change_item_in_grid),
+    screen.Command('ch', editor_change_args, change_item_in_grid)
+    
 ]
 
 home_scrn.add_several_commands(home_commands)

@@ -4,6 +4,7 @@ supaparse.py
 This module allows you to read, interpret and write to SP and DAT files.
 """
 
+BYTES_PER_SP_LEVEL_DATA = 1440
 BYTES_PER_SP_FILE = 1536
 BYTES_PER_DAT_FILE = 1536 * 111
 
