@@ -25,7 +25,7 @@ def int_to_hex_string(n: int) -> str:
 
 
 class Grid:
-    def __init__(self, level_data: dict[str, list[int]], element_db: dict[str, list[str, str, None | bool, bool | None, bool | None]], display_type: str | int = 0, cell_capacity: int = 5, level_num: int = 1, width: int = 60, height: int = 24) -> None:
+    def __init__(self, level_data: dict[str, list[int]], element_db: dict[str, list[str, str, None | bool, bool | None, bool | None]], display_type: str | int = 0, cell_capacity: int = 5, level_num: int = 1, width: int = 60, height: int = 24, filepath: str | None = None) -> None:
         """
         __init__ setups the Grid
 
@@ -52,6 +52,7 @@ class Grid:
         number_of_signs: int = cell_capacity * width + width - 1
         
         self._CELL_CAPACITY: int = cell_capacity
+        self._GIVEN_PATH = filepath
         
         self.HORIZONTAL_SEPARATOR: str = '=' * number_of_signs
         self.HSEP: str = self.HORIZONTAL_SEPARATOR
@@ -79,6 +80,15 @@ class Grid:
                 self._ELEM_DISPLAY_TYPE = 'integer'
                 
         self._ELEM_DATABASE = element_db
+    
+    def find_special_port_id(self, hi: int, lo: int) -> int:
+        for var_id in range(1, 11):
+            var_port = self._LEVEL[f'special_port{var_id}']
+            
+            if var_port[0] == hi and var_port[1] == lo:
+                return var_id
+            
+        return 0
     
     def get_coord_from_index(self, index: int) -> tuple[int, int]:
         y, x = divmod(index, self._WIDTH)
@@ -177,6 +187,10 @@ class Grid:
     def level(self) -> dict[str, list[int]]:
         return self._LEVEL
     
+    @property
+    def filepath(self) -> str:
+        return self._GIVEN_PATH
+        
     def render_grid(self) -> str:
         visual_grid: str = VERTICAL_LINE
         

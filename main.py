@@ -3,6 +3,7 @@ import simple_webbrowser
 import sys
 import os
 import math
+import random
 from core import screen, settings, supaparse, encoder, exit_program
 import grid
 
@@ -17,7 +18,6 @@ import grid
 class TagError(Exception): ...
 class FileExtensionError(Exception): ...
 class SupaplexStructureError(Exception): ...
-
 
 FIXME = grid.CHANGE_ME_LATER
 RENDER_CONTEXT = '!/CURRENTRENDERCONTEXTASISNOCHANGE/'
@@ -205,7 +205,7 @@ def new_level_on_editor(path: str, template_name: str = 'BLANK') -> screen.Conte
         template_contents: bytearray = supaparse.get_file_contents_as_bytearray(PARSER.templates[template_name])
         level_details: dict[str, list[int]] = supaparse.interpret_sp_data(template_contents)
 
-    cur_grid = grid.Grid(level_details, PARSER.supaplex_element_database, PARSER.element_display_type, PARSER.grid_cell_capacity, 1)
+    cur_grid = grid.Grid(level_details, PARSER.supaplex_element_database, PARSER.element_display_type, PARSER.grid_cell_capacity, 1, filepath=path)
     editor_scrn.update_state(cur_grid.render_grid())
 
     return editor_scrn
@@ -232,7 +232,7 @@ def open_level_on_editor(path: str) -> screen.Context:
 
     level_details: dict[str, list[int]] = supaparse.interpret_sp_data(supaparse.get_file_contents_as_bytearray(path_to_open))
 
-    cur_grid = grid.Grid(level_details, PARSER.supaplex_element_database, PARSER.element_display_type, PARSER.grid_cell_capacity, 1)
+    cur_grid = grid.Grid(level_details, PARSER.supaplex_element_database, PARSER.element_display_type, PARSER.grid_cell_capacity, 1, filepath=path_to_open)
     editor_scrn.update_state(cur_grid.render_grid())
 
     return editor_scrn
@@ -384,6 +384,162 @@ def look_for_element_occurence(element: int, skip_counter: int = 0):
     return f"Element #{element} found at ({item_coords[0]}, {item_coords[1]})\n\n{cur_grid.render_grid()}"
 
 
+def edit_special_port_properties(x: int, y: int, gravity: int = -1, frozen_zonks: int = -1, frozen_enemies: int = -1, unused_byte: int = -1):
+    if x > 59:
+        raise ValueError('X value cannot be greater than 59')
+
+    if y > 23:
+        raise ValueError('Y value cannot be greater than 23')
+
+    if x < 0:
+        raise ValueError('X value cannot be lower than 0')
+
+    if y < 0:
+        raise ValueError('Y value cannot be lower than 0')
+    
+    matching_index: int = cur_grid.get_index_from_coord(x, y)
+    
+    if cur_grid.level['level'][matching_index] not in (13, 14, 15, 16):
+        raise grid.ElementError('selected item is not a special port')
+    
+    hi, lo = supaparse.calculate_special_port_hi_lo(x, y)
+    
+    special_port_id: int = cur_grid.find_special_port_id(hi, lo)
+    
+    if not special_port_id:
+        raise grid.ElementError(f"couldn't find a special port with hi {hi} and lo {lo}")
+    
+    if gravity >= 0:
+        gravity = supaparse.clamp_value(gravity, 0, 8)
+        cur_grid.level[f'special_port{special_port_id}'][2] = [gravity]
+
+    if frozen_zonks >= 0:
+        if frozen_zonks > 2:
+            frozen_zonks = 0
+
+        frozen_zonks = supaparse.clamp_value(frozen_zonks, 1, 2)
+        cur_grid.level[f'special_port{special_port_id}'][3] = [frozen_zonks]
+
+    if frozen_enemies >= 0:
+        frozen_enemies = supaparse.clamp_value(frozen_enemies, 0, 1)
+        cur_grid.level[f'special_port{special_port_id}'][4] = [frozen_enemies]
+        
+    if unused_byte >= 0:
+        unused_byte = supaparse.clamp_value(unused_byte, 0, 255)
+        cur_grid.level[f'special_port{special_port_id}'][5] = [unused_byte]
+
+    return f"Changes applied to port at ({x}, {y})!\n\n{cur_grid.render_grid()}"
+
+
+def view_special_port_properties(x: int, y: int):
+    if x > 59:
+        raise ValueError('X value cannot be greater than 59')
+
+    if y > 23:
+        raise ValueError('Y value cannot be greater than 23')
+
+    if x < 0:
+        raise ValueError('X value cannot be lower than 0')
+
+    if y < 0:
+        raise ValueError('Y value cannot be lower than 0')
+    
+    matching_index: int = cur_grid.get_index_from_coord(x, y)
+    
+    if cur_grid.level['level'][matching_index] not in (13, 14, 15, 16):
+        raise grid.ElementError('selected item is not a special port')
+    
+    hi, lo = supaparse.calculate_special_port_hi_lo(x, y)
+    
+    special_port_id: int = cur_grid.find_special_port_id(hi, lo)
+    
+    if not special_port_id:
+        raise grid.ElementError(f"couldn't find a special port with hi {hi} and lo {lo}")
+    
+    if cur_grid.level[f'special_port{special_port_id}'][2] > 0:
+        gravity_status = 'Gravity ON'
+    
+    else:
+        gravity_status = 'Gravity OFF'
+
+    if cur_grid.level[f'special_port{special_port_id}'][3] == 2:
+        fzonks_status = 'Freeze Zonks'
+    
+    else:
+        fzonks_status = 'Unfreeze Zonks'
+        
+    if cur_grid.level[f'special_port{special_port_id}'][4] == 1:
+        fenemies_status = 'Freeze Enemies'
+    
+    else:
+        fenemies_status = 'Unfreeze Enemies'
+
+    return f"Port #{special_port_id} at ({x}, {y}): {gravity_status} | {fzonks_status} | {fenemies_status}\n\n{cur_grid.render_grid()}"
+
+
+def fill_area_randomly(x1: int, y1: int, x2: int, y2: int, item: int, num: int, keep_intact: int | bool = False):
+    if x1 > 59 or x2 > 59:
+        raise ValueError('X values cannot be greater than 59')
+
+    if y1 > 23 or y2 > 23:
+        raise ValueError('Y values cannot be greater than 23')
+
+    if x1 < 0 or x2 < 0:
+        raise ValueError('X values cannot be lower than 0')
+
+    if y1 < 0 or y2 < 0:
+        raise ValueError('Y values cannot be lower than 0')
+    
+    selection_table: list[int] = cur_grid.get_index_from_selection(x1, y1, x2, y2)
+    
+    if num < 1:
+        num = len(selection_table)
+    
+    for index, match in enumerate(selection_table.copy(), 0):
+        if num < 1:
+            break
+        
+        if keep_intact and cur_grid.level['level'][match] != 0:
+            selection_table.pop(index)
+        
+        if random.choice((True, False)):
+            num -= 1
+            continue
+            
+        selection_table.pop(index)
+        
+    for index in selection_table:
+        cur_grid.change_element_by_index(index=index, element=item)
+        
+    return f"Randomized item {item} sucessfully.\n\n{cur_grid.render_grid()}"
+
+
+def replace_item_for_new_in_area(x1: int, y1: int, x2: int, y2: int, old_item: int, new_item: int):
+    if x1 > 59 or x2 > 59:
+        raise ValueError('X values cannot be greater than 59')
+
+    if y1 > 23 or y2 > 23:
+        raise ValueError('Y values cannot be greater than 23')
+
+    if x1 < 0 or x2 < 0:
+        raise ValueError('X values cannot be lower than 0')
+
+    if y1 < 0 or y2 < 0:
+        raise ValueError('Y values cannot be lower than 0')
+    
+    selection_table: list[int] = cur_grid.get_index_from_selection(x1, y1, x2, y2)
+
+    for index in selection_table:
+        if cur_grid.level['level'][index] == old_item:
+            cur_grid.change_element_by_index(index, new_item)
+            
+    return f"Operation completed with no errors.\n\n{cur_grid.render_grid()}"
+
+
+def save_level_sp_format(path: str = DEFAULT_PLACEHOLDER):
+    pass
+    
+
 home_cd_del_args: list[screen.Argument] = [screen.Argument('path')]
 home_echo_args: list[screen.Argument, screen.OptionalArgument] = [screen.Argument('what'), screen.OptionalArgument('path', '')]
 home_eval_args: list[screen.Argument] = [screen.Argument('expression')]
@@ -423,7 +579,6 @@ editor_commands: list[screen.Command] = [
     screen.Command('outline', [screen.Argument('new_item', 'int')], change_level_borders),
     screen.Command('change', editor_change_args, change_item_in_grid),
     screen.Command('ch', editor_change_args, change_item_in_grid)
-    
 ]
 
 home_scrn.add_several_commands(home_commands)
