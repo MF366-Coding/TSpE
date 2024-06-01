@@ -4,7 +4,8 @@ import sys
 import os
 import math
 import random
-from core import screen, settings, supaparse, encoder, exit_program
+from core import screen, settings, supaparse, exit_program
+from core.encoder import full_encoder
 import grid
 
 # pylint: disable=W0603
@@ -22,6 +23,7 @@ class SupaplexStructureError(Exception): ...
 FIXME = grid.CHANGE_ME_LATER
 RENDER_CONTEXT = '!/CURRENTRENDERCONTEXTASISNOCHANGE/'
 DEFAULT_PLACEHOLDER = "default.value.placeholder.check.for.existing.value"
+SUPAPLEX_ONLINE_TEST_BASE_URL = 'https://www.supaplex.online/test/#gz,' # [i] thanks Greg :)
 
 program_data = {
     "ascii": ['MMP""MM""YMM  .M"""bgd        `7MM"""YMM  ',
@@ -83,7 +85,7 @@ def change_directory(path: str) -> str:
     else:
         raise FileNotFoundError('the selected path does not exist')
 
-    cur_dir = path
+    cur_dir = path_to_change_to
 
     return f"Working Directory is now set to: {cur_dir}\n\n{RENDER_CONTEXT}"
 
@@ -197,7 +199,20 @@ def new_level_on_editor(path: str, template_name: str = 'BLANK') -> screen.Conte
 
     if not path.lower().endswith('.sp') and not PARSER.allow_weird_extensions:
         raise FileExtensionError('weird use of file extension - should be SP (to always ignore this error, change "ignoreWeirdUseOfFileExtensions" in settings to true)')
+    
+    exists_as_given: bool = os.path.exists(os.path.dirname(path))
+    exists_as_joint_path: bool = os.path.exists(os.path.join(cur_dir, os.path.dirname(path)))
+    path_to_create = False
 
+    if exists_as_given:
+        path_to_create: str = path
+
+    elif exists_as_joint_path:
+        path_to_create: str = os.path.join(cur_dir, path)
+
+    else:
+        raise FileNotFoundError('the selected path does not exist')
+    
     if template_name not in PARSER.templates:
         level_details: dict[str, list[int]] = supaparse.generate_empty_sp_level()
 
@@ -205,7 +220,9 @@ def new_level_on_editor(path: str, template_name: str = 'BLANK') -> screen.Conte
         template_contents: bytearray = supaparse.get_file_contents_as_bytearray(PARSER.templates[template_name])
         level_details: dict[str, list[int]] = supaparse.interpret_sp_data(template_contents)
 
-    cur_grid = grid.Grid(level_details, PARSER.supaplex_element_database, PARSER.element_display_type, PARSER.grid_cell_capacity, 1, filepath=path)
+    supaparse.write_sp_file(path_to_create, level_details)
+    
+    cur_grid = grid.Grid(level_details, PARSER.supaplex_element_database, PARSER.element_display_type, PARSER.grid_cell_capacity, 1, filepath=path_to_create)
     editor_scrn.update_state(cur_grid.render_grid())
 
     return editor_scrn
@@ -241,7 +258,6 @@ def open_level_on_editor(path: str) -> screen.Context:
 def open_spfix_documentation() -> str:
     simple_webbrowser.website("https://github.com/MF366-Coding/The-Ultimate-Supaplex-Archive/blob/d04be7b765bb9c50a9eb014527aef688fc483556/Supaplex_Stuff/Documentation/SPFIX63a.pdf")
     return RENDER_CONTEXT
-
 
 
 # [*] Editor/Grid Commands
@@ -514,7 +530,7 @@ def fill_area_randomly(x1: int, y1: int, x2: int, y2: int, item: int, num: int, 
     return f"Randomized item {item} sucessfully.\n\n{cur_grid.render_grid()}"
 
 
-def replace_item_for_new_in_area(x1: int, y1: int, x2: int, y2: int, old_item: int, new_item: int):
+def replace_item_for_new_in_area(x1: int, y1: int, x2: int, y2: int, old_item: int, new_item: int) -> str:
     if x1 > 59 or x2 > 59:
         raise ValueError('X values cannot be greater than 59')
 
@@ -536,8 +552,48 @@ def replace_item_for_new_in_area(x1: int, y1: int, x2: int, y2: int, old_item: i
     return f"Operation completed with no errors.\n\n{cur_grid.render_grid()}"
 
 
-def save_level_sp_format(path: str = DEFAULT_PLACEHOLDER):
-    pass
+def save_level_sp_format(path: str = '') -> str:
+    if not path:
+        supaparse.write_sp_file(cur_grid.filepath, cur_grid.level)
+        return f"Saved at {cur_grid.filepath}.\n\n{cur_grid.render_grid()}"
+    
+    exists_as_given: bool = os.path.exists(os.path.dirname(path))
+    exists_as_joint_path: bool = os.path.exists(os.path.join(cur_dir, os.path.dirname(path)))
+    path_to_create = False
+
+    if exists_as_given:
+        path_to_create: str = path
+
+    elif exists_as_joint_path:
+        path_to_create: str = os.path.join(cur_dir, path)
+
+    else:
+        raise FileNotFoundError('the selected path does not exist')
+    
+    supaparse.write_sp_file(path_to_create, cur_grid.level)
+    return f"Saved at {path_to_create}.\n\n{cur_grid.render_grid()}"
+
+
+def save_level_sp_format_quit(path: str = '') -> screen.Context:
+    save_level_sp_format(path)
+    home_scrn.update_state(FIXME)
+    return home_scrn
+
+
+def test_level_supaplex_online() -> str:
+    '''
+    FIXME
+    '''
+    
+    level_as_bytes = supaparse.format_back_sp_data(cur_grid.level)
+    compressed_level = full_encoder.compress_bytes(bytes(level_as_bytes))
+    encoded_level = full_encoder.encode_string(compressed_level)
+    
+    testing_url = f"{SUPAPLEX_ONLINE_TEST_BASE_URL}{encoded_level}"
+    
+    simple_webbrowser.website(testing_url)
+    
+    return f"Testing level...\n\n{cur_grid.render_grid()}"
     
 
 home_cd_del_args: list[screen.Argument] = [screen.Argument('path')]
