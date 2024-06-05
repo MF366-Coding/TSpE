@@ -583,18 +583,19 @@ def save_level_sp_format_quit(path: str = '') -> screen.Context:
 def test_level_supaplex_online() -> str:
     '''
     FIXME
+    still doesnt work very well but i have to move on for now
+    ill come back to this later
     '''
     
     level_as_bytes = supaparse.format_back_sp_data(cur_grid.level)
-    compressed_level = full_encoder.compress_bytes(bytes(level_as_bytes))
-    encoded_level = full_encoder.encode_string(compressed_level)
+    encoded_level = full_encoder.encode_bytes(level_as_bytes)
     
     testing_url = f"{SUPAPLEX_ONLINE_TEST_BASE_URL}{encoded_level}"
     
     simple_webbrowser.website(testing_url)
     
     return f"Testing level...\n\n{cur_grid.render_grid()}"
-    
+
 
 home_cd_del_args: list[screen.Argument] = [screen.Argument('path')]
 home_echo_args: list[screen.Argument, screen.OptionalArgument] = [screen.Argument('what'), screen.OptionalArgument('path', '')]
