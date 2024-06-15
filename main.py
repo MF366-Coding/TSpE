@@ -597,6 +597,71 @@ def test_level_supaplex_online() -> str:
     return f"Testing level...\n\n{cur_grid.render_grid()}"
 
 
+def verify_exit_murphy() -> str:
+    if cur_grid.murphy_count > 0 and cur_grid.exit_count > 0:
+        return f"The level has Murphies and Exits! Good job :)\n\n{cur_grid.render_grid()}"
+    
+    return f"Hmmm... The levels is lacking either Murphies or Exits :(\n\n{cur_grid.render_grid()}"
+
+
+def set_selection_outline(x1: int, y1: int, x2: int, y2: int, item: int) -> str:
+    if x1 > 59 or x2 > 59:
+        raise ValueError('X values cannot be greater than 59')
+
+    if y1 > 23 or y2 > 23:
+        raise ValueError('Y values cannot be greater than 23')
+
+    if x1 < 0 or x2 < 0:
+        raise ValueError('X values cannot be lower than 0')
+
+    if y1 < 0 or y2 < 0:
+        raise ValueError('Y values cannot be lower than 0')
+    
+    border_up: list[int] = cur_grid.get_index_from_selection(x1=x1, y1=y1, x2=x2, y2=y1)
+    border_down: list[int] = cur_grid.get_index_from_selection(x1=x1, y1=y2, x2=x2, y2=y2)
+    border_left: list[int] = cur_grid.get_index_from_selection(x1=x1, y1=y1, x2=x1, y2=y2)
+    border_right: list[int] = cur_grid.get_index_from_selection(x1=x2, y1=y1, x2=x2, y2=y2)
+
+    for index in border_down + border_left + border_right + border_up:
+        cur_grid.change_element_by_index(index, item)
+
+    return f"Done!\n\n{cur_grid.render_grid()}"
+
+
+def display_element_information(item: int) -> str: # [i] 'wtf' command
+    details: list[str, str, bool | None, bool, bool] = PARSER.supaplex_element_database[str(item)]
+    
+    name, symbol_code = details[0], details[1]
+    
+    if details[2] is True:
+        sprite_type = "'Fancy' Sprite"
+        
+    elif details[2] is False:
+        sprite_type = "'Dull' Sprite"
+        
+    else:
+        sprite_type = "Regular Sprite"
+    
+    destructible: str = 'Destructible' if details[3] is True else "Indestructible"
+    
+    explosive: str = 'Explosive' if details[4] is True else 'Not Explosive'
+
+    return f"Element #{item}: {name} (Symbol {symbol_code}; {sprite_type}; {destructible}; {explosive})"
+    
+
+def quit_level_editor() -> screen.Context:
+    return home_scrn
+
+
+def reload_current_screen() -> screen.Context:
+    return SCREEN.context
+
+
+def open_repository_on_browser() -> str:
+    simple_webbrowser.website('https://github.com/MF366-Coding/TSpE')
+    return f":)\n\n{RENDER_CONTEXT}"
+
+
 home_cd_del_args: list[screen.Argument] = [screen.Argument('path')]
 home_echo_args: list[screen.Argument, screen.OptionalArgument] = [screen.Argument('what'), screen.OptionalArgument('path', '')]
 home_eval_args: list[screen.Argument] = [screen.Argument('expression')]

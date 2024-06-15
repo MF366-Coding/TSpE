@@ -40,7 +40,7 @@ class SettingsParser:
         return self._settings['testProviders']
     
     @property
-    def supaplex_element_database(self) -> dict[str, str]:
+    def supaplex_element_database(self) -> dict[str, list[str, str, bool | None, bool, bool]]:
         return self._settings['spElems']
 
     @property

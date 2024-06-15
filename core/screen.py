@@ -223,6 +223,11 @@ class Screen:
         else:
             self.change_context(new_state)
 
+    
+    @property
+    def context(self):
+        return self._cur_context
+    
 
     builtin_print = print
     print, printlines = write, writelines

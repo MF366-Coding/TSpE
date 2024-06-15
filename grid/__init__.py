@@ -236,4 +236,16 @@ Gravity {'OFF' if not self._LEVEL['initial_gravitation'] else 'ON'} | Frozen Zon
         
     def __str__(self) -> str:
         return self.render_grid()
+    
+    @property
+    def murphy_count(self):
+        return self._murphies
+    
+    @property
+    def infotron_count(self):
+        return self._infotrons
+    
+    @property
+    def exit_count(self):
+        return self._exits
         
