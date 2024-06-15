@@ -178,7 +178,7 @@ def evaluate_pythonic_expression(expression: str):
 
 def change_directory_alternative(tagname: str) -> str:
     if tagname in ('..', '*', '~'):
-        raise TagError("such tag is not allowed - even if it's on the JSON file, it cannot be accepted by TSpE")
+        raise TagError("such tag is not allowed - even if it's in the JSON file, it cannot be accepted by TSpE")
 
     try:
         tagpath: str = PARSER.tags[tagname]
@@ -340,7 +340,7 @@ def change_grid_with_checkers_pattern(x1: int, y1: int, x2: int, y2: int, item_1
 
         cur_grid.change_element_by_index(index, item)
 
-    return f"Checkers board recreated at ({x1}, {y1}) - ({x2}, {y2}) using elements {item_1} and {item_2}.\n\n{cur_grid.render_grid()}"
+    return f"Checker board recreated at ({x1}, {y1}) - ({x2}, {y2}) using elements {item_1} and {item_2}.\n\n{cur_grid.render_grid()}"
 
 
 def fill_square_area(x1: int, y1: int, x2: int, y2: int, item: int) -> str:
