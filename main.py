@@ -1,9 +1,13 @@
-from colorama import Style
+# main.py
+
+# XXX from colorama import Style
+import requests
 import simple_webbrowser
 import sys
 import os
 import math
 import random
+import json
 from core import screen, settings, supaparse, exit_program
 from core.encoder import full_encoder
 import grid
@@ -13,12 +17,15 @@ import grid
 
 # [i] my plans for the next coding sessions are:
 # [*] FINISH THE GODDAMN OUTSIDE FUNCTIONS AND TEST THE DAMN SCREEN!
-# TODO
+# FIXME
 
 
 class TagError(Exception): ...
 class FileExtensionError(Exception): ...
 class SupaplexStructureError(Exception): ...
+
+VERSION = "v0.0.1"
+LATEST = None
 
 FIXME = grid.CHANGE_ME_LATER
 RENDER_CONTEXT = '!/CURRENTRENDERCONTEXTASISNOCHANGE/'
@@ -653,6 +660,10 @@ def quit_level_editor() -> screen.Context:
     return home_scrn
 
 
+def quit_app():
+    exit_program.leave_program(PARSER)
+
+
 def reload_current_screen() -> screen.Context:
     return SCREEN.context
 
@@ -660,6 +671,22 @@ def reload_current_screen() -> screen.Context:
 def open_repository_on_browser() -> str:
     simple_webbrowser.website('https://github.com/MF366-Coding/TSpE')
     return f":)\n\n{RENDER_CONTEXT}"
+
+
+def check_for_updates():
+    global LATEST
+    
+    # [i] If there isn't a cached version...
+    if LATEST is None:
+        try:
+            response = requests.get('https://api.github.com/repos/MF366-Coding/TSpE/releases/latest', timeout=1)
+            data = json.loads(response.text)
+            LATEST = data['tag_name']
+            
+        except requests.RequestException:
+            return f"Could not get the latest release :(\n\n{RENDER_CONTEXT}"
+    
+    return f"Latest Stable: {LATEST} || Current Version: {VERSION}"
 
 
 home_cd_del_args: list[screen.Argument] = [screen.Argument('path')]

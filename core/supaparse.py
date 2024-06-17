@@ -162,7 +162,7 @@ class SupaplexLevelsetFile:
         for level_num in range(111):
             cur_iter = level_num * BYTES_PER_SP_FILE
             self._levelset.append(interpret_sp_data(contents[cur_iter:cur_iter + BYTES_PER_SP_FILE]))
-            
+    
     def save_to_file(self, filepath: str):
         """
         save_to_file save the levelset the filepath
@@ -187,6 +187,10 @@ class SupaplexLevelsetFile:
         """
         
         return self._levelset
+    
+    @levelset.setter
+    def levelset(self, new_levelset: list[dict[str, list[int]]]):
+        self._levelset = new_levelset
     
     def __getitem__(self, level_num: int) -> dict[str, list[int]]:
         return self._levelset[level_num]
