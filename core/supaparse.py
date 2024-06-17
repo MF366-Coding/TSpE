@@ -193,6 +193,7 @@ class SupaplexLevelsetFile:
         self._levelset = new_levelset
     
     def __getitem__(self, level_num: int) -> dict[str, list[int]]:
+        # [!?] DON'T FORGET THAT THE LIST IS 0-INDEXED BUT THE LEVEL NUMS START AT 1!!
         return self._levelset[level_num]
     
     def __str__(self) -> str:
@@ -201,12 +202,12 @@ class SupaplexLevelsetFile:
     write_file = save_to_file
 
 
-def generate_empty_sp_level() -> dict[str, list[int]]:
+def generate_empty_sp_level_as_dict() -> dict[str, list[int]]:
     return interpret_sp_data(bytearray([0] * BYTES_PER_SP_FILE))
 
 
-def generate_empty_dat_as_dict() -> dict[str, list[int]]:
-    return interpret_sp_data(bytearray([0] * BYTES_PER_DAT_FILE))
+def generate_empty_dat_as_bytearray() -> bytearray:
+    return bytearray([0] * BYTES_PER_DAT_FILE)
 
 
 def string_to_bytes(string: str) -> list[int]:

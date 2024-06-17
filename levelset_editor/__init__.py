@@ -12,21 +12,19 @@ class LevelsetEditor:
             
         elif len(self._LEVELSET.levelset) < 111:
             for _ in range(111 - len(self._LEVELSET.levelset)):
-                self._LEVELSET.levelset.append(supaparse.interpret_sp_data(supaparse.generate_empty_sp_level()))
+                self._LEVELSET.levelset.append(supaparse.generate_empty_sp_level_as_dict())
         
     def prioritize_edited_levels(self):
         indexes_to_pop: list[int] = []
         
         for index, level in enumerate(self._LEVELSET.levelset, 0):
-            if level == supaparse.interpret_sp_data(data=supaparse.generate_empty_sp_level()):
+            if level == supaparse.generate_empty_sp_level_as_dict():
                 indexes_to_pop.append(index)
 
         indexes_to_pop.sort(reverse=True)
         
         for index in indexes_to_pop:
             self._LEVELSET.levelset.pop(index)
-            
-        self.normalize_levelset()
         
     def render_list(self):
         levelset_list = "=== TSpE - Levelset Editor ===\n"

@@ -190,6 +190,10 @@ class Grid:
     @property
     def filepath(self) -> str:
         return self._GIVEN_PATH
+    
+    @property
+    def level_number(self) -> str:
+        return self._level_num
         
     def render_grid(self) -> str:
         visual_grid: str = VERTICAL_LINE

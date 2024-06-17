@@ -10,6 +10,7 @@ import random
 import json
 from core import screen, settings, supaparse, exit_program
 from core.encoder import full_encoder
+import levelset_editor
 import grid
 
 # pylint: disable=W0603
@@ -23,6 +24,8 @@ import grid
 class TagError(Exception): ...
 class FileExtensionError(Exception): ...
 class SupaplexStructureError(Exception): ...
+class LevelLimitReached(Exception): ...
+class LevelNotFoundError(Exception): ...
 
 VERSION = "v0.0.1"
 LATEST = None
@@ -58,9 +61,11 @@ else:
 cur_dir: str = os.getcwd()
 
 cur_grid: grid.Grid | None = None
+cur_levelset_editor: levelset_editor.LevelsetEditor | None = None
 
 home_scrn = screen.Context('Home Screen', FIXME)
 editor_scrn = screen.Context("Level Editor", FIXME)
+levelset_scrn = screen.Context("Levelset Editor", FIXME)
 
 
 # [*] Home screen setup
@@ -221,7 +226,7 @@ def new_level_on_editor(path: str, template_name: str = 'BLANK') -> screen.Conte
         raise FileNotFoundError('the selected path does not exist')
     
     if template_name not in PARSER.templates:
-        level_details: dict[str, list[int]] = supaparse.generate_empty_sp_level()
+        level_details: dict[str, list[int]] = supaparse.generate_empty_sp_level_as_dict()
 
     else:
         template_contents: bytearray = supaparse.get_file_contents_as_bytearray(PARSER.templates[template_name])
@@ -559,8 +564,13 @@ def replace_item_for_new_in_area(x1: int, y1: int, x2: int, y2: int, old_item: i
     return f"Operation completed with no errors.\n\n{cur_grid.render_grid()}"
 
 
-def save_level_sp_format(path: str = '') -> str:
+def save_level_sp_format(path: str = '') -> str:    
     if not path:
+        if not cur_grid.filepath:
+            cur_levelset_editor.levelset[int(cur_grid.level_number) - 1] = cur_grid.level
+            levelset_scrn.update_state(cur_levelset_editor.render_list())
+            return f"Level version updated! After you're done, quit and save the whole levelset to apply changes.\n\n{cur_grid.render_grid()}"
+        
         supaparse.write_sp_file(cur_grid.filepath, cur_grid.level)
         return f"Saved at {cur_grid.filepath}.\n\n{cur_grid.render_grid()}"
     
@@ -583,6 +593,10 @@ def save_level_sp_format(path: str = '') -> str:
 
 def save_level_sp_format_quit(path: str = '') -> screen.Context:
     save_level_sp_format(path)
+    
+    if not cur_grid.filepath:
+        return levelset_scrn
+    
     home_scrn.update_state(FIXME)
     return home_scrn
 
@@ -590,7 +604,7 @@ def save_level_sp_format_quit(path: str = '') -> screen.Context:
 def test_level_supaplex_online() -> str:
     '''
     FIXME
-    still doesnt work very well but i have to move on for now
+    still doesnt work well but i have to move on for now
     ill come back to this later
     '''
     
@@ -688,6 +702,135 @@ def check_for_updates():
     
     return f"Latest Stable: {LATEST} || Current Version: {VERSION}"
 
+
+def create_new_levelset(path: str):
+    global cur_levelset_editor
+
+    exists_as_given: bool = os.path.exists(os.path.dirname(path))
+    exists_as_joint_path: bool = os.path.exists(os.path.join(cur_dir, os.path.dirname(path)))
+    path_to_create = False
+
+    if exists_as_given:
+        path_to_create: str = path
+
+    elif exists_as_joint_path:
+        path_to_create: str = os.path.join(cur_dir, path)
+
+    else:
+        raise FileNotFoundError('the selected path does not exist')
+    
+    supaparse.write_sp_file(path_to_create, supaparse.generate_empty_dat_as_bytearray())
+    
+    levelset = supaparse.SupaplexLevelsetFile(path_to_create)
+    
+    cur_levelset_editor = levelset_editor.LevelsetEditor(levelset, path_to_create)
+    levelset_scrn.update_state(cur_levelset_editor.render_list())
+
+    return levelset_scrn
+    
+
+def open_existing_levelset(path: str):
+    global cur_levelset_editor
+
+    exists_as_given: bool = os.path.exists(path)
+    exists_as_joint_path: bool = os.path.exists(os.path.join(cur_dir, path))
+    path_to_open = False
+
+    if exists_as_given:
+        path_to_open: str = path
+
+    elif exists_as_joint_path:
+        path_to_open: str = os.path.join(cur_dir, path)
+
+    else:
+        raise FileNotFoundError("is the path correct?")
+
+    levelset = supaparse.SupaplexLevelsetFile(path_to_open)
+
+    cur_levelset_editor = levelset_editor.LevelsetEditor(levelset)
+    levelset_scrn.update_state(cur_levelset_editor.render_list())
+
+    return levelset_scrn
+
+
+def add_level_to_levelset(path: str):
+    cur_levelset_editor.normalize_levelset()
+    cur_levelset_editor.prioritize_edited_levels()
+    
+    if len(cur_levelset_editor.levelset) == 111:
+        raise LevelLimitReached('the limit of 111 edited levels in a levelset has been reached and no more can be added')
+    
+    if not path.lower().endswith('.sp') and not PARSER.allow_weird_extensions:
+        raise FileExtensionError('weird use of file extension - should be SP (to always ignore this error, change "ignoreWeirdUseOfFileExtensions" in settings to true)')
+
+    exists_as_given: bool = os.path.exists(path)
+    exists_as_joint_path: bool = os.path.exists(os.path.join(cur_dir, path))
+    path_to_open = False
+
+    if exists_as_given:
+        path_to_open: str = path
+
+    elif exists_as_joint_path:
+        path_to_open: str = os.path.join(cur_dir, path)
+
+    else:
+        raise FileNotFoundError("is the path correct?")
+
+    level_details: dict[str, list[int]] = supaparse.interpret_sp_data(supaparse.get_file_contents_as_bytearray(path_to_open))
+    cur_levelset_editor.levelset.levelset.append(level_details)
+    
+    cur_levelset_editor.normalize_levelset()
+    
+    return f"Level {path_to_open} has been added to the levelset.\n\n{cur_levelset_editor.render_list()}"
+
+
+def create_new_level_inside_levelset():
+    cur_levelset_editor.normalize_levelset()
+    cur_levelset_editor.prioritize_edited_levels()
+    
+    if len(cur_levelset_editor.levelset) == 111:
+        raise LevelLimitReached('the limit of 111 edited levels in a levelset has been reached and no more can be added')
+    
+    cur_levelset_editor.levelset.levelset.append(supaparse.generate_empty_sp_level_as_dict())
+    cur_levelset_editor.normalize_levelset()
+    
+    return f"A new empty level has been added to the levelset.\n\n{cur_levelset_editor.render_list()}"
+
+
+def duplicate_level_in_levelset(level_num: int):
+    cur_levelset_editor.normalize_levelset()
+    cur_levelset_editor.prioritize_edited_levels()
+    
+    if len(cur_levelset_editor.levelset) == 111:
+        raise LevelLimitReached('the limit of 111 edited levels in a levelset has been reached and no more can be added')
+    
+    if level_num > len(cur_levelset_editor.levelset):
+        raise LevelNotFoundError(f'level {level_num} does NOT exist')
+    
+    level_data = cur_levelset_editor.levelset[level_num - 1]
+    cur_levelset_editor.levelset.levelset.append(level_data)
+    cur_levelset_editor.normalize_levelset()
+    
+    return f"Level {level_num} has been duplicated.\n\n{cur_levelset_editor.render_list()}"
+
+
+def edit_level_from_levelset(level_num: int) -> screen.Context:
+    global cur_grid
+    
+    cur_levelset_editor.normalize_levelset()
+    
+    if level_num > len(cur_levelset_editor.levelset):
+        raise LevelNotFoundError(f'level {level_num} does NOT exist')
+
+    level_details: dict[str, list[int]] = cur_levelset_editor.levelset[level_num - 1]
+
+    cur_grid = grid.Grid(level_details, PARSER.supaplex_element_database, PARSER.element_display_type, PARSER.grid_cell_capacity, 1)
+    editor_scrn.update_state(cur_grid.render_grid())
+    
+    levelset_scrn.update_state(cur_levelset_editor.render_list())
+
+    return editor_scrn
+    
 
 home_cd_del_args: list[screen.Argument] = [screen.Argument('path')]
 home_echo_args: list[screen.Argument, screen.OptionalArgument] = [screen.Argument('what'), screen.OptionalArgument('path', '')]
