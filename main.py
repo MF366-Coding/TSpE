@@ -8,17 +8,12 @@ import os
 import math
 import random
 import json
-from core import screen, settings, supaparse, exit_program
-from core.encoder import full_encoder
+from core import screen, settings, supaparse, exit_program, encoder
 import levelset_editor
 import grid
 
 # pylint: disable=W0603
 # pylint: disable=W0123
-
-# [i] my plans for the next coding sessions are:
-# [*] FINISH THE GODDAMN OUTSIDE FUNCTIONS AND TEST THE DAMN SCREEN!
-# FIXME
 
 
 class TagError(Exception): ...
@@ -30,26 +25,26 @@ class LevelNotFoundError(Exception): ...
 VERSION = "v0.0.1"
 LATEST = None
 
-FIXME = grid.CHANGE_ME_LATER
 RENDER_CONTEXT = '!/CURRENTRENDERCONTEXTASISNOCHANGE/'
-DEFAULT_PLACEHOLDER = "default.value.placeholder.check.for.existing.value"
+DEFAULT_PLACEHOLDER = "default_value_placeholder_check_for_existing_value"
 SUPAPLEX_ONLINE_TEST_BASE_URL = 'https://www.supaplex.online/test/#gz,' # [i] thanks Greg :)
 
-program_data = {
-    "ascii": ['MMP""MM""YMM  .M"""bgd        `7MM"""YMM  ',
-              'P\'   MM   `7 ,MI    "Y          MM    `7  ',
-              '     MM      `MMb.   `7MMpdMAo. MM   d    ',
-              '     MM        `YMMNq. MM   `Wb MMmmMM    ',
-              '     MM      .     `MM MM    M8 MM   Y  , ',
-              '     MM      Mb     dM MM   ,AP MM     ,M ',
-              '   .JMML.    P"Ybmmd"  MMbmmd\'.JMMmmmmMMM ',
-              '                       MM                 ',
-              '                     .JMML.               '],
-    "name": "TSpE",
-    "author": "MF366",
-    "copyright": "Copyright (C) 2024  MF366",
-    "description": "Terminal Supaplex Editor"
-}
+TITLE = '''
+
+MMP""MM""YMM  .M"""bgd        `7MM"""YMM  
+P'   MM   `7 ,MI    "Y          MM    `7  
+     MM      `MMb.   `7MMpdMAo. MM   d    
+     MM        `YMMNq. MM   `Wb MMmmMM    
+     MM      .     `MM MM    M8 MM   Y  , 
+     MM      Mb     dM MM   ,AP MM     ,M 
+   .JMML.    P"Ybmmd"  MMbmmd'.JMMmmmmMMM 
+                       MM                 
+                     .JMML.     
+
+TSpE
+MF366
+Copyright (C) 2024  MF366
+Terminal Supaplex Editor'''
 
 
 if len(sys.argv) > 1:
@@ -63,9 +58,9 @@ cur_dir: str = os.getcwd()
 cur_grid: grid.Grid | None = None
 cur_levelset_editor: levelset_editor.LevelsetEditor | None = None
 
-home_scrn = screen.Context('Home Screen', FIXME)
-editor_scrn = screen.Context("Level Editor", FIXME)
-levelset_scrn = screen.Context("Levelset Editor", FIXME)
+home_scrn = screen.Context('Home Screen', TITLE)
+editor_scrn = screen.Context("Level Editor", DEFAULT_PLACEHOLDER)
+levelset_scrn = screen.Context("Levelset Editor", DEFAULT_PLACEHOLDER)
 
 
 # [*] Home screen setup
@@ -597,21 +592,15 @@ def save_level_sp_format_quit(path: str = '') -> screen.Context:
     if not cur_grid.filepath:
         return levelset_scrn
     
-    home_scrn.update_state(FIXME)
-    return home_scrn
+    return quit_to_home_scrn()
 
 
 def test_level_supaplex_online() -> str:
-    '''
-    FIXME
-    still doesnt work well but i have to move on for now
-    ill come back to this later
-    '''
+    level_as_bytes: bytearray = supaparse.format_back_sp_data(cur_grid.level)
+    compressed_level = encoder.compress_bytes(level_as_bytes)
+    encoded_level: bytes = encoder.encode_bytes(compressed_level)
     
-    level_as_bytes = supaparse.format_back_sp_data(cur_grid.level)
-    encoded_level = full_encoder.encode_bytes(level_as_bytes)
-    
-    testing_url = f"{SUPAPLEX_ONLINE_TEST_BASE_URL}{encoded_level}"
+    testing_url = f"{SUPAPLEX_ONLINE_TEST_BASE_URL}{str(encoded_level, encoding='utf-8')}"
     
     simple_webbrowser.website(testing_url)
     
@@ -670,7 +659,8 @@ def display_element_information(item: int) -> str: # [i] 'wtf' command
     return f"Element #{item}: {name} (Symbol {symbol_code}; {sprite_type}; {destructible}; {explosive})"
     
 
-def quit_level_editor() -> screen.Context:
+def quit_to_home_scrn() -> screen.Context:
+    home_scrn.update_state(TITLE)
     return home_scrn
 
 
@@ -842,7 +832,7 @@ def remove_level_from_levelset(level_num: int):
     cur_levelset_editor.prioritize_edited_levels()
     cur_levelset_editor.normalize_levelset()
     
-    return f"Done.\n\n\{cur_levelset_editor.render_list()}"
+    return f"Done.\n\n{cur_levelset_editor.render_list()}"
 
 
 def save_levelset(path: str = '') -> str:
@@ -892,6 +882,13 @@ def swap_levels_in_levelset(level_a: int, level_b: int):
     return f"Swapped levels {level_a} and {level_b}.\n\n{cur_levelset_editor.render_list()}"
 
 
+def quit_level_editor() -> screen.Context:
+    if not cur_grid.filepath:
+        return levelset_scrn
+    
+    return quit_to_home_scrn()
+
+
 home_cd_del_args: list[screen.Argument] = [screen.Argument('path')]
 home_echo_args: list[screen.Argument, screen.OptionalArgument] = [screen.Argument('what'), screen.OptionalArgument('path', '')]
 home_eval_args: list[screen.Argument] = [screen.Argument('expression')]
@@ -904,7 +901,7 @@ home_commands: list[screen.Command] = [
     screen.Command('delete', home_cd_del_args, delete_file_or_folder),
     screen.Command('del', home_cd_del_args, delete_file_or_folder), # [i] Forgot to implement aliases - too late now - so this is how I'm gonna do it
     screen.Command('dump', [], dump_tspe_settings),
-    screen.Command('echo', home_cd_del_args, echo_like_command),
+    screen.Command('echo', home_echo_args, echo_like_command),
     screen.Command('evaluate', home_eval_args, evaluate_pythonic_expression),
     screen.Command('eval', home_eval_args, evaluate_pythonic_expression),
     screen.Command('goto', home_cd_alt_args, change_directory_alternative),
@@ -919,7 +916,8 @@ home_commands: list[screen.Command] = [
     screen.Command('spfix', [], open_spfix_documentation)
 ]
 
-level_attributes_args: list[screen.OptionalArgument] = [screen.OptionalArgument('infotrons', -1, 'int'), screen.OptionalArgument('gravity', -1, 'bool'), screen.OptionalArgument('frozen_zonks', -1, 'bool'), screen.OptionalArgument('level_name', DEFAULT_PLACEHOLDER)]
+level_attributes_args: list[screen.OptionalArgument] = [screen.OptionalArgument('infotrons', -1, 'int'), screen.OptionalArgument('gravity', -1, 'int'),
+                                                        screen.OptionalArgument('frozen_zonks', -1, 'int'), screen.OptionalArgument(name='level_name', default_value=DEFAULT_PLACEHOLDER)]
 editor_change_args: list[screen.Argument] = [screen.Argument('x', 'int'), screen.Argument('y', 'int'), screen.Argument('new_item', 'int')]
 
 editor_commands: list[screen.Command] = [
@@ -936,4 +934,8 @@ editor_commands: list[screen.Command] = [
 home_scrn.add_several_commands(home_commands)
 
 SCREEN = screen.Screen(PARSER.colormap, home_scrn)
+home_scrn.register_screen(SCREEN)
+editor_scrn.register_screen(SCREEN)
+levelset_scrn.register_screen(SCREEN)
 
+SCREEN.change_context(home_scrn)

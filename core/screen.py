@@ -74,8 +74,8 @@ class OptionalArgument(GenericArgument):
 
         self._TYPE: str = argtype
 
-        if not isinstance(default_value, self.argtype_as_pytype()):
-            raise TypeError('default value does not match argument type')
+        if not isinstance(default_value, self.argtype_as_pytype):
+            raise TypeError(f'default value does not match argument type - {type(default_value)} x {self.argtype_as_pytype}')
 
         self._DEFAULT_VALUE: object = default_value
 
@@ -84,18 +84,15 @@ class OptionalArgument(GenericArgument):
         return self._TYPE
 
     @property
-    def argtype_as_pytype(self) -> type[bool] | type[int] | type[str] | None:
-        match self._TYPE:
-            case 'bool':
-                return bool
-
-            case 'int':
-                return int
-
-            case 'str':
-                return str
-
-        return None
+    def argtype_as_pytype(self) -> type:
+        if self._TYPE == 'bool':
+            return bool
+        
+        elif self._TYPE == 'int':
+            return int
+        
+        else:
+            return str
 
     @property
     def default_value(self) -> object:
@@ -152,10 +149,10 @@ class Screen:
         self.clear_screen()
 
         self.write(str(self._cur_context))
+        self.read_command()
 
     def read_command(self) -> None:
-        self.write(f"{self._COLORMAP['COMMAND_BACKGROUND']}{self._COLORMAP['COMMAND_FOREGROUND']}>>> ")
-        self.newline()
+        self.write("\n>>> ")
 
         command_name = input()
 
@@ -166,14 +163,17 @@ class Screen:
 
         except InvalidCommand as e:
             self.clear_screen()
-            self.write(f"{self._COLORMAP['ERROR_BACKGROUND']}{self._COLORMAP['ERROR_FOREGROUND']}InvalidCommand - {e}\n\n{self._COLORMAP['RESET_ALL']}{str(self._cur_context)}")
+            self.write(f"InvalidCommand - {e}\n\n{str(self._cur_context)}")
+            self.read_command()
             return
+        
+        self.newline()
 
         list_of_args = []
 
         for argument in command_object.arguments:
             if isinstance(argument, OptionalArgument):
-                self.write(f"{self._COLORMAP['ARGUMENT_BACKGROUND']}{self._COLORMAP['ARGUMENT_FOREGROUND']}{argument.name} ({argument.argtype}, defaults to {argument.default_value} - hit ENTER to use this value): ")
+                self.write(f"{argument.name} ({argument.argtype}, defaults to {argument.default_value} - hit ENTER to use this value): ")
 
                 input_arg = input()
 
@@ -184,20 +184,21 @@ class Screen:
                     list_of_args.append(input_arg)
 
             elif isinstance(argument, Argument):
-                self.write(f"{self._COLORMAP['ARGUMENT_BACKGROUND']}{self._COLORMAP['ARGUMENT_FOREGROUND']}{argument.name} ({argument.argtype}, mandatory): ")
+                self.write(f"{argument.name} ({argument.argtype}, mandatory): ")
 
                 input_arg = input()
 
                 if not input_arg:
                     self.clear_screen()
-                    self.write(f"{self._COLORMAP['ERROR_BACKGROUND']}{self._COLORMAP['ERROR_FOREGROUND']}MissingArgumentForCommand - a value for '{argument.name}' must be given but none was\n\n{self._COLORMAP['RESET_ALL']}{str(self._cur_context)}")
+                    self.write(f"MissingArgumentForCommand - a value for '{argument.name}' must be given but none was\n\n{str(self._cur_context)}")
+                    self.read_command()
                     return
 
                 else:
                     list_of_args.append(input_arg)
 
             else:
-                self.write(f"{self._COLORMAP['ARGUMENT_BACKGROUND']}{self._COLORMAP['ARGUMENT_FOREGROUND']}{argument.name} (generic argument): ")
+                self.write(f"{argument.name} (generic argument): ")
                 list_of_args.append(input())
 
         try:
@@ -205,7 +206,8 @@ class Screen:
 
         except ArgTypeError as e:
             self.clear_screen()
-            self.write(f"{self._COLORMAP['ERROR_BACKGROUND']}{self._COLORMAP['ERROR_FOREGROUND']}ArgumentRelatedError - {e}\n\n{self._COLORMAP['RESET_ALL']}{str(self._cur_context)}")
+            self.write(f"ArgumentRelatedError - {e}\n\n{str(self._cur_context)}")
+            self.read_command()
             return
 
         try:
@@ -213,7 +215,8 @@ class Screen:
 
         except Exception as e:
             self.clear_screen()
-            self.write(f"{self._COLORMAP['ERROR_BACKGROUND']}{self._COLORMAP['ERROR_FOREGROUND']}Oops! Something went wrong... - {e}\n\n{self._COLORMAP['RESET_ALL']}{str(self._cur_context)}")
+            self.write(f"Oops! Something went wrong... - {e}\n\n{str(self._cur_context)}")
+            self.read_command()
             return
 
         if isinstance(new_state, str):
@@ -302,6 +305,7 @@ class Command:
 class Context:
     def __init__(self, name: str, initial_scrn_state: str, commands: list[Command] = None) -> None:
         self._NAME: str = name
+        self._SCREEN_INST = None
         
         if commands is None:
             self._COMMANDS = []
@@ -310,7 +314,10 @@ class Context:
             self._COMMANDS: list[Command] = commands
         
         self._state: str = initial_scrn_state
-        
+    
+    def register_screen(self, screen: Screen):
+        self._SCREEN_INST = screen
+    
     def add_command(self, command: Command):
         if command in self._COMMANDS:
             raise InvalidCommand('command already exists in this context')
@@ -326,8 +333,8 @@ class Context:
 
     def update_screen(self, update: str) -> None:
         self.update_state(new_state=update)
-        SCREEN_INST.clear_screen()
-        SCREEN_INST.write(self._state)
+        self._SCREEN_INST.clear_screen()
+        self._SCREEN_INST.change_context(self)
     
     def remove_state_infoline(self) -> None:
         self.update_state(new_state=self._state.split('\n', 1)[1])

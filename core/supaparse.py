@@ -198,6 +198,9 @@ class SupaplexLevelsetFile:
     
     def __str__(self) -> str:
         return str(self._levelset)
+    
+    def __len__(self) -> int:
+        return len(self._levelset)
                 
     write_file = save_to_file
 
