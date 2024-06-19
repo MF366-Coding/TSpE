@@ -747,7 +747,7 @@ def open_existing_levelset(path: str):
 
     levelset = supaparse.SupaplexLevelsetFile(path_to_open)
 
-    cur_levelset_editor = levelset_editor.LevelsetEditor(levelset)
+    cur_levelset_editor = levelset_editor.LevelsetEditor(levelset, path_to_open)
     levelset_scrn.update_state(cur_levelset_editor.render_list())
 
     return levelset_scrn
@@ -830,7 +830,67 @@ def edit_level_from_levelset(level_num: int) -> screen.Context:
     levelset_scrn.update_state(cur_levelset_editor.render_list())
 
     return editor_scrn
+
+
+def remove_level_from_levelset(level_num: int):
+    cur_levelset_editor.normalize_levelset()
     
+    if level_num > len(cur_levelset_editor.levelset):
+        raise LevelNotFoundError(f'level {level_num} does NOT exist')
+
+    cur_levelset_editor.levelset.levelset.pop(level_num - 1)
+    cur_levelset_editor.prioritize_edited_levels()
+    cur_levelset_editor.normalize_levelset()
+    
+    return f"Done.\n\n\{cur_levelset_editor.render_list()}"
+
+
+def save_levelset(path: str = '') -> str:
+    cur_levelset_editor.normalize_levelset()
+    
+    if not path:
+        cur_levelset_editor.levelset.write_file(cur_levelset_editor.filepath)
+        return f"Saved at: {cur_levelset_editor.filepath}\n\n{cur_levelset_editor.render_list()}"
+    
+    exists_as_given: bool = os.path.exists(os.path.dirname(path))
+    exists_as_joint_path: bool = os.path.exists(os.path.join(cur_dir, os.path.dirname(path)))
+    path_to_create = False
+
+    if exists_as_given:
+        path_to_create: str = path
+
+    elif exists_as_joint_path:
+        path_to_create: str = os.path.join(cur_dir, path)
+
+    else:
+        raise FileNotFoundError('the selected path does not exist')
+    
+    cur_levelset_editor.levelset.write_file(path_to_create)
+    return f"Saved at: {path_to_create}\n\n{cur_levelset_editor.render_list()}"
+
+
+def save_levelset_quit(path: str = '') -> screen.Context:
+    save_levelset(path)
+    return home_scrn
+
+
+def swap_levels_in_levelset(level_a: int, level_b: int):
+    cur_levelset_editor.normalize_levelset()
+    
+    if level_a > len(cur_levelset_editor.levelset) or level_b > len(cur_levelset_editor.levelset):
+        raise LevelNotFoundError("at least one of the levels doesn't exist does NOT exist")
+    
+    level_b_data: dict[str, list[int]] = cur_levelset_editor.levelset[level_b - 1]
+    level_a_data: dict[str, list[int]] = cur_levelset_editor.levelset[level_a - 1]
+    
+    cur_levelset_editor.levelset.levelset[level_a - 1] = level_b_data
+    cur_levelset_editor.levelset.levelset[level_b - 1] = level_a_data
+    
+    cur_levelset_editor.prioritize_edited_levels()
+    cur_levelset_editor.normalize_levelset()
+    
+    return f"Swapped levels {level_a} and {level_b}.\n\n{cur_levelset_editor.render_list()}"
+
 
 home_cd_del_args: list[screen.Argument] = [screen.Argument('path')]
 home_echo_args: list[screen.Argument, screen.OptionalArgument] = [screen.Argument('what'), screen.OptionalArgument('path', '')]
