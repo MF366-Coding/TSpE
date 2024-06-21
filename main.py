@@ -1,6 +1,5 @@
 # main.py
 
-# XXX from colorama import Style
 import requests
 import simple_webbrowser
 import sys
@@ -29,9 +28,15 @@ RENDER_CONTEXT = '!/CURRENTRENDERCONTEXTASISNOCHANGE/'
 DEFAULT_PLACEHOLDER = "default_value_placeholder_check_for_existing_value"
 SUPAPLEX_ONLINE_TEST_BASE_URL = 'https://www.supaplex.online/test/#gz,' # [i] thanks Greg :)
 
-TITLE = '''
+if len(sys.argv) > 1:
+    PARSER = settings.SettingsParser(sys.argv[1])
 
-MMP""MM""YMM  .M"""bgd        `7MM"""YMM  
+else:
+    PARSER = settings.SettingsParser(os.path.join(os.path.dirname(__file__), 'core', 'settings.json'))
+
+TITLE = f'''
+
+{PARSER.colormap['WARNING_FOREGROUND']}MMP""MM""YMM  .M"""bgd        `7MM"""YMM  
 P'   MM   `7 ,MI    "Y          MM    `7  
      MM      `MMb.   `7MMpdMAo. MM   d    
      MM        `YMMNq. MM   `Wb MMmmMM    
@@ -40,18 +45,11 @@ P'   MM   `7 ,MI    "Y          MM    `7
    .JMML.    P"Ybmmd"  MMbmmd'.JMMmmmmMMM 
                        MM                 
                      .JMML.     
-
+{PARSER.colormap['RESET']}
 TSpE
 MF366
 Copyright (C) 2024  MF366
 Terminal Supaplex Editor'''
-
-
-if len(sys.argv) > 1:
-    PARSER = settings.SettingsParser(sys.argv[1])
-
-else:
-    PARSER = settings.SettingsParser(os.path.join(os.path.dirname(__file__), 'core', 'settings.json'))
 
 cur_dir: str = os.getcwd()
 
@@ -151,7 +149,7 @@ def echo_like_command(what: str, path: str = None):
         raise BufferError("can't write to an object that isn't a file")
 
     else:
-        with open(path_to_write, 'a', encoding='\n') as f:
+        with open(path_to_write, 'a', encoding='utf-8') as f:
             f.write(f'\n{echoed_contents}')
 
     return f"Appended contents to {path_to_write}\n\n{RENDER_CONTEXT}"

@@ -1,4 +1,47 @@
 import json
+from colorama import Fore, Back, Style
+
+
+COLORMAP_CONVERSION_TABLE = [
+    Style.RESET_ALL,
+    Style.BRIGHT,
+    Style.DIM,
+    Style.NORMAL,
+    Fore.RESET,
+    Fore.BLUE,
+    Fore.CYAN,
+    Fore.YELLOW,
+    Fore.RED,
+    Fore.GREEN,
+    Fore.MAGENTA,
+    Fore.WHITE,
+    Fore.BLACK,
+    Back.RESET,
+    Back.BLUE,
+    Back.CYAN,
+    Back.YELLOW,
+    Back.RED,
+    Back.GREEN,
+    Back.MAGENTA,
+    Back.WHITE,
+    Back.BLACK,
+    Fore.LIGHTBLUE_EX,
+    Fore.LIGHTCYAN_EX,
+    Fore.LIGHTYELLOW_EX,
+    Fore.LIGHTRED_EX,
+    Fore.LIGHTGREEN_EX,
+    Fore.LIGHTMAGENTA_EX,
+    Fore.LIGHTWHITE_EX,
+    Fore.LIGHTBLACK_EX,
+    Back.LIGHTBLUE_EX,
+    Back.LIGHTCYAN_EX,
+    Back.LIGHTYELLOW_EX,
+    Back.LIGHTRED_EX,
+    Back.LIGHTGREEN_EX,
+    Back.LIGHTMAGENTA_EX,
+    Back.LIGHTWHITE_EX,
+    Back.LIGHTBLACK_EX
+]
 
 
 class SettingsParser:
@@ -28,8 +71,8 @@ class SettingsParser:
         return self._settings
 
     @property
-    def colormap(self) -> dict[str, str]:
-        return self._settings['colormap']
+    def colormap(self) -> dict[str | int]:
+        return {k: COLORMAP_CONVERSION_TABLE[v] for k, v in self._settings['colormap'].items()}
     
     @property
     def templates(self) -> dict[str, str]:

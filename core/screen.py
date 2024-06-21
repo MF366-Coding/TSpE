@@ -11,7 +11,6 @@ import sys
 import time
 import random
 from typing import Callable, Any
-from colorama import Fore
 
 # pylint: disable=W0123
 # pylint: disable=W0603
@@ -99,20 +98,17 @@ class OptionalArgument(GenericArgument):
         return self._DEFAULT_VALUE
 
 
-
 class Screen:
     def __init__(self, colormap: dict[str, str | None], initial_context) -> None:
         self._COLORMAP: dict[str, str | None] = colormap
+        self._REMOVE_LINE = False
         self._cur_context: Context = initial_context
         self._last_cleared: float = time.time()
 
-    def newline(self, count: int = 1):
+    def newline(self, count: int = 1) -> None:
         self.write('\n' * count)
 
-    def reset(self):
-        self.write(self._COLORMAP.get('RESET', Fore.RESET))
-
-    def write(self, __s: str, __stdout: bool = True):
+    def write(self, __s: str, __stdout: bool = True) -> int | Any:
         __outputter = sys.stdout
 
         if not __stdout:
@@ -127,16 +123,6 @@ class Screen:
             __outputter = sys.stderr
 
         __outputter.writelines(__iterable)
-
-    def pretty_ascii(self, __table: list[str]):
-        for index, line in enumerate(__table, 0):
-            if index % 2 == 0:
-                self.write(self._COLORMAP['ASCII_PRIMARY'], True)
-
-            else:
-                self.write(self._COLORMAP['ASCII_SECONDARY'], True)
-
-            self.write(f"{line}\n", True)
 
     def clear_screen(self, *_, **options) -> int:
         if options.get('count_time', True):
@@ -154,16 +140,18 @@ class Screen:
     def read_command(self) -> None:
         self.write("\n>>> ")
 
-        command_name = input()
-
-        self._cur_context.remove_state_infoline()
+        command_name = input().lower().strip()
+        self._cur_context.remove_state_infoline(self._REMOVE_LINE)
+        
+        self._REMOVE_LINE = True
 
         try:
             command_object: Command = self._cur_context.get_command(command_name)
 
         except InvalidCommand as e:
             self.clear_screen()
-            self.write(f"InvalidCommand - {e}\n\n{str(self._cur_context)}")
+            self.write(f"{self._COLORMAP['ERROR_BACKGROUND']}{self._COLORMAP['ERROR_FOREGROUND']}InvalidCommand - {e}{self._COLORMAP['RESET_ALL']}\n\n{str(self._cur_context)}")
+            self._REMOVE_LINE = False
             self.read_command()
             return
         
@@ -173,7 +161,7 @@ class Screen:
 
         for argument in command_object.arguments:
             if isinstance(argument, OptionalArgument):
-                self.write(f"{argument.name} ({argument.argtype}, defaults to {argument.default_value} - hit ENTER to use this value): ")
+                self.write(f"{self._COLORMAP['INFO_BACKGROUND']}{self._COLORMAP['INFO_FOREGROUND']}{argument.name}{self._COLORMAP['RESET_ALL']} ({argument.argtype}, defaults to {argument.default_value} - hit ENTER to use this value): ")
 
                 input_arg = input()
 
@@ -184,13 +172,14 @@ class Screen:
                     list_of_args.append(input_arg)
 
             elif isinstance(argument, Argument):
-                self.write(f"{argument.name} ({argument.argtype}, mandatory): ")
+                self.write(f"{self._COLORMAP['INFO_BACKGROUND']}{self._COLORMAP['INFO_FOREGROUND']}{argument.name}{self._COLORMAP['RESET_ALL']} ({argument.argtype}, mandatory): ")
 
                 input_arg = input()
 
                 if not input_arg:
                     self.clear_screen()
-                    self.write(f"MissingArgumentForCommand - a value for '{argument.name}' must be given but none was\n\n{str(self._cur_context)}")
+                    self.write(f"{self._COLORMAP['ERROR_BACKGROUND']}{self._COLORMAP['ERROR_FOREGROUND']}MissingArgumentForCommand - a value for '{argument.name}' must be given but none was{self._COLORMAP['RESET_ALL']}\n\n{str(self._cur_context)}")
+                    self._REMOVE_LINE = False
                     self.read_command()
                     return
 
@@ -198,7 +187,7 @@ class Screen:
                     list_of_args.append(input_arg)
 
             else:
-                self.write(f"{argument.name} (generic argument): ")
+                self.write(f"{self._COLORMAP['INFO_BACKGROUND']}{self._COLORMAP['INFO_FOREGROUND']}{argument.name}{self._COLORMAP['RESET_ALL']} (generic argument): ")
                 list_of_args.append(input())
 
         try:
@@ -206,7 +195,8 @@ class Screen:
 
         except ArgTypeError as e:
             self.clear_screen()
-            self.write(f"ArgumentRelatedError - {e}\n\n{str(self._cur_context)}")
+            self.write(f"{self._COLORMAP['ERROR_BACKGROUND']}{self._COLORMAP['ERROR_FOREGROUND']}ArgumentRelatedError - {e}{self._COLORMAP['RESET_ALL']}\n\n{str(self._cur_context)}")
+            self._REMOVE_LINE = False
             self.read_command()
             return
 
@@ -215,15 +205,18 @@ class Screen:
 
         except Exception as e:
             self.clear_screen()
-            self.write(f"Oops! Something went wrong... - {e}\n\n{str(self._cur_context)}")
+            self.write(f"{self._COLORMAP['ERROR_BACKGROUND']}{self._COLORMAP['ERROR_FOREGROUND']}Oops! Something went wrong... - {e}{self._COLORMAP['RESET_ALL']}\n\n{str(self._cur_context)}")
+            self._REMOVE_LINE = False
             self.read_command()
             return
 
         if isinstance(new_state, str):
             self._cur_context.update_screen(new_state.replace('!/CURRENTRENDERCONTEXTASISNOCHANGE/', str(self._cur_context)))
+            self._REMOVE_LINE = True
             return
         
         else:
+            self._REMOVE_LINE = True
             self.change_context(new_state)
 
     
@@ -234,18 +227,6 @@ class Screen:
 
     builtin_print = print
     print, printlines = write, writelines
-
-
-SCREEN_INST: Screen | None = None
-
-
-def setup_screen(scrn: Screen) -> None:
-    global SCREEN_INST
-
-    if SCREEN_INST is not None:
-        return None
-
-    SCREEN_INST = scrn
 
 
 class Command:
@@ -336,8 +317,11 @@ class Context:
         self._SCREEN_INST.clear_screen()
         self._SCREEN_INST.change_context(self)
     
-    def remove_state_infoline(self) -> None:
+    def remove_state_infoline(self, regular_screen_update: bool) -> None:
         self.update_state(new_state=self._state.split('\n', 1)[1])
+        
+        if not regular_screen_update:
+            self.update_state(f"\n{self._state}")
 
     def execute_command(self, command: Command, interpreted_args: list[str | bool | int], *args, **kwargs) -> str | Any:
         return command.call_function(*tuple(interpreted_args), *args, **kwargs)
