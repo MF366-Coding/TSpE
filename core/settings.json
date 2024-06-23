@@ -18,7 +18,12 @@
         "LEVEL_NUM_BACKGROUND": 25,
         "LEVEL_NUM_FOREGROUND": 29,
         "LEVEL_NAME_BACKGROUND": 13,
-        "LEVEL_NAME_FOREGROUND": 25
+        "LEVEL_NAME_FOREGROUND": 25,
+        "ASCII_TITLE": 7,
+        "TITLE_FOREGROUND": 12,
+        "TITLE_BACKGROUND": 16,
+        "AUTHOR_FOREGROUND": 5,
+        "AUTHOR_BACKGROUND": 13
     },
     "tags": {},
     "testProviders": {},

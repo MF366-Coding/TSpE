@@ -357,6 +357,10 @@ class Context:
     @property
     def commands(self) -> list[Command]:
         return self._COMMANDS
+    
+    @property
+    def cur_state(self) -> str:
+        return self._state
 
     def __str__(self) -> str:
         return self._state

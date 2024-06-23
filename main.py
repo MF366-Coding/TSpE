@@ -24,7 +24,7 @@ class LevelNotFoundError(Exception): ...
 VERSION = "v0.0.1"
 LATEST = None
 
-RENDER_CONTEXT = '!/CURRENTRENDERCONTEXTASISNOCHANGE/'
+RENDER_CONTEXT = '!/CURRENTRENDERCONTEXTASISNOCHANGE/' # [!] deprecated
 DEFAULT_PLACEHOLDER = "default_value_placeholder_check_for_existing_value"
 SUPAPLEX_ONLINE_TEST_BASE_URL = 'https://www.supaplex.online/test/#gz,' # [i] thanks Greg :)
 
@@ -36,7 +36,7 @@ else:
 
 TITLE = f'''
 
-{PARSER.colormap['WARNING_FOREGROUND']}MMP""MM""YMM  .M"""bgd        `7MM"""YMM  
+{PARSER.colormap['ASCII_TITLE']}MMP""MM""YMM  .M"""bgd        `7MM"""YMM  
 P'   MM   `7 ,MI    "Y          MM    `7  
      MM      `MMb.   `7MMpdMAo. MM   d    
      MM        `YMMNq. MM   `Wb MMmmMM    
@@ -46,10 +46,10 @@ P'   MM   `7 ,MI    "Y          MM    `7
                        MM                 
                      .JMML.     
 {PARSER.colormap['RESET']}
-TSpE
-MF366
-Copyright (C) 2024  MF366
-Terminal Supaplex Editor'''
+{PARSER.colormap['TITLE_BACKGROUND']}{PARSER.colormap['TITLE_FOREGROUND']}TSpE
+{PARSER.colormap['AUTHOR_BACKGROUND']}{PARSER.colormap['AUTHOR_FOREGROUND']}MF366
+{PARSER.colormap['RESET_ALL']}Copyright (C) 2024  MF366
+{PARSER.colormap['ASCII_TITLE']}Terminal Supaplex Editor'''
 
 cur_dir: str = os.getcwd()
 
@@ -63,7 +63,7 @@ levelset_scrn = screen.Context("Levelset Editor", DEFAULT_PLACEHOLDER)
 
 # [*] Home screen setup
 def about_tspe() -> str:
-    return f"TSpE - Terminal Supaplex Editor is a backwards-compatible Supaplex level editor made by MF366\n\n{RENDER_CONTEXT}"
+    return f"{PARSER.colormap['INFO_BACKGROUND']}{PARSER.colormap['INFO_FOREGROUND']}TSpE - Terminal Supaplex Editor is a backwards-compatible Supaplex level editor made by MF366{PARSER.colormap['RESET_ALL']}\n\n{TITLE}"
 
 
 def change_directory(path: str) -> str:
@@ -71,11 +71,11 @@ def change_directory(path: str) -> str:
 
     if path == '..':
         cur_dir = os.path.dirname(cur_dir)
-        return f"Working Directory is now set to: {cur_dir}\n\n{RENDER_CONTEXT}"
+        return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Working Directory is now set to: {cur_dir}{PARSER.colormap['RESET_ALL']}\n\n{TITLE}"
 
     if path == '~':
         cur_dir = os.path.expanduser('~')
-        return f"Working Directory is now set to: {cur_dir}\n\n{RENDER_CONTEXT}"
+        return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Working Directory is now set to: {cur_dir}{PARSER.colormap['RESET_ALL']}\n\n{TITLE}"
 
     exists_as_given: bool = os.path.exists(path)
     exists_as_joint_path: bool = os.path.exists(os.path.join(cur_dir, path))
@@ -92,7 +92,7 @@ def change_directory(path: str) -> str:
 
     cur_dir = path_to_change_to
 
-    return f"Working Directory is now set to: {cur_dir}\n\n{RENDER_CONTEXT}"
+    return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Working Directory is now set to: {cur_dir}{PARSER.colormap['RESET_ALL']}\n\n{TITLE}"
 
 
 def delete_file_or_folder(path: str) -> str:
@@ -118,19 +118,19 @@ def delete_file_or_folder(path: str) -> str:
     else:
         os.remove(path_to_remove)
 
-    return f"'{path_to_remove}' sucessfully removed!\n\n{RENDER_CONTEXT}"
+    return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}'{path_to_remove}' sucessfully removed!{PARSER.colormap['RESET_ALL']}\n\n{TITLE}"
 
 
 def dump_tspe_settings() -> str:
     PARSER.save_reload()
-    return f"Settings loaded!\n\n{RENDER_CONTEXT}"
+    return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Settings loaded!{PARSER.colormap['RESET_ALL']}\n\n{TITLE}"
 
 
 def echo_like_command(what: str, path: str = None):
     echoed_contents: str = ' '.join(what.split('\n'))
 
     if not path:
-        return f"{echoed_contents}\n\n{RENDER_CONTEXT}"
+        return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}{echoed_contents}{PARSER.colormap['RESET_ALL']}\n\n{TITLE}"
 
     exists_as_given: bool = os.path.exists(path)
     exists_as_joint_path: bool = os.path.exists(os.path.join(cur_dir, path))
@@ -152,7 +152,7 @@ def echo_like_command(what: str, path: str = None):
         with open(path_to_write, 'a', encoding='utf-8') as f:
             f.write(f'\n{echoed_contents}')
 
-    return f"Appended contents to {path_to_write}\n\n{RENDER_CONTEXT}"
+    return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Appended contents to {path_to_write}{PARSER.colormap['RESET_ALL']}\n\n{TITLE}"
 
 
 def evaluate_pythonic_expression(expression: str):
@@ -178,7 +178,7 @@ def evaluate_pythonic_expression(expression: str):
     else:
         final_exp = evaluated_exp
 
-    return f'Result: {str(final_exp).strip()}\n\n{RENDER_CONTEXT}'
+    return f"{PARSER.colormap['INFO_BACKGROUND']}{PARSER.colormap['INFO_FOREGROUND']}Result: {str(final_exp).strip()}{PARSER.colormap['RESET_ALL']}\n\n{TITLE}"
 
 
 def change_directory_alternative(tagname: str) -> str:
@@ -196,7 +196,7 @@ def change_directory_alternative(tagname: str) -> str:
 
 def reload_tspe_settings() -> str:
     PARSER.force_reload()
-    return f"Settings have been reloaded!\n\n{RENDER_CONTEXT}"
+    return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Settings have been reloaded!{PARSER.colormap['RESET_ALL']}\n\n{TITLE}"
 
 
 def new_level_on_editor(path: str, template_name: str = 'BLANK') -> screen.Context:
@@ -260,9 +260,9 @@ def open_level_on_editor(path: str) -> screen.Context:
     return editor_scrn
 
 
-def open_spfix_documentation() -> str:
+def open_spfix_documentation() -> screen.Context:
     simple_webbrowser.website("https://github.com/MF366-Coding/The-Ultimate-Supaplex-Archive/blob/d04be7b765bb9c50a9eb014527aef688fc483556/Supaplex_Stuff/Documentation/SPFIX63a.pdf")
-    return RENDER_CONTEXT
+    return home_scrn
 
 
 # [*] Editor/Grid Commands
@@ -288,7 +288,7 @@ def edit_level_properties(infotrons: int = -1, gravity: bool | int = -1, frozen_
         bytetitle: list[int] = supaparse.string_to_bytetitle(level_name)
         cur_grid.level['level_title'] = bytetitle
 
-    return f"Changes applied!\n\n{cur_grid.render_grid()}"
+    return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Changes applied!{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
 
 
 def change_level_borders(new_item: int) -> str:
@@ -300,7 +300,7 @@ def change_level_borders(new_item: int) -> str:
     for index in border_down + border_left + border_right + border_up:
         cur_grid.change_element_by_index(index, new_item)
 
-    return f"Done!\n\n{cur_grid.render_grid()}"
+    return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Done!{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
 
 
 def change_item_in_grid(x: int, y: int, new_item: int) -> str:
@@ -318,7 +318,7 @@ def change_item_in_grid(x: int, y: int, new_item: int) -> str:
 
     cur_grid.change_element_by_coordinate(x, y, new_item)
 
-    return f"Item at ({x}, {y}) changed to {new_item} sucessfully\n\n{cur_grid.render_grid()}"
+    return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Item at ({x}, {y}) changed to {new_item} sucessfully{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
 
 
 def change_grid_with_checkers_pattern(x1: int, y1: int, x2: int, y2: int, item_1: int, item_2: int) -> str:
@@ -345,7 +345,7 @@ def change_grid_with_checkers_pattern(x1: int, y1: int, x2: int, y2: int, item_1
 
         cur_grid.change_element_by_index(index, item)
 
-    return f"Checker board recreated at ({x1}, {y1}) - ({x2}, {y2}) using elements {item_1} and {item_2}.\n\n{cur_grid.render_grid()}"
+    return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Checker board recreated at ({x1}, {y1}) - ({x2}, {y2}) using elements {item_1} and {item_2}.{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
 
 
 def fill_square_area(x1: int, y1: int, x2: int, y2: int, item: int) -> str:
@@ -366,12 +366,12 @@ def fill_square_area(x1: int, y1: int, x2: int, y2: int, item: int) -> str:
     for index in selection_table:
         cur_grid.change_element_by_index(index, item)
 
-    return f"Filled selection ({x1}, {y1}) - ({x2}, {y2}) with element {item} sucessfully.\n\n{cur_grid.render_grid()}"
+    return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Filled selection ({x1}, {y1}) - ({x2}, {y2}) with element {item} sucessfully.{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
 
 
 def erase_grid_entry(x: int, y: int) -> str:
     cur_grid.change_element_by_coordinate(x, y, 0)
-    return f"Erased ({x}, {y}) sucessfully\n\n{cur_grid.render_grid()}"
+    return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Erased ({x}, {y}) sucessfully{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
 
 
 def fill_grid_with_elem(element: int):
@@ -400,9 +400,9 @@ def look_for_element_occurence(element: int, skip_counter: int = 0):
             item_coords = cur_grid.get_coord_from_index(index)
             
     if item_coords is None:
-        return f"Element #{element} not found\n\n{cur_grid.render_grid()}"
+        return f"{PARSER.colormap['WARNING_BACKGROUND']}{PARSER.colormap['WARNING_FOREGROUND']}Element #{element} not found{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
     
-    return f"Element #{element} found at ({item_coords[0]}, {item_coords[1]})\n\n{cur_grid.render_grid()}"
+    return f"{PARSER.colormap['INFO_BACKGROUND']}{PARSER.colormap['INFO_FOREGROUND']}Element #{element} found at ({item_coords[0]}, {item_coords[1]}){PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
 
 
 def edit_special_port_properties(x: int, y: int, gravity: int = -1, frozen_zonks: int = -1, frozen_enemies: int = -1, unused_byte: int = -1):
@@ -449,7 +449,7 @@ def edit_special_port_properties(x: int, y: int, gravity: int = -1, frozen_zonks
         unused_byte = supaparse.clamp_value(unused_byte, 0, 255)
         cur_grid.level[f'special_port{special_port_id}'][5] = [unused_byte]
 
-    return f"Changes applied to port at ({x}, {y})!\n\n{cur_grid.render_grid()}"
+    return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Changes applied to port at ({x}, {y})!{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
 
 
 def view_special_port_properties(x: int, y: int):
@@ -495,7 +495,7 @@ def view_special_port_properties(x: int, y: int):
     else:
         fenemies_status = 'Unfreeze Enemies'
 
-    return f"Port #{special_port_id} at ({x}, {y}): {gravity_status} | {fzonks_status} | {fenemies_status}\n\n{cur_grid.render_grid()}"
+    return f"{PARSER.colormap['INFO_BACKGROUND']}{PARSER.colormap['INFO_FOREGROUND']}Port #{special_port_id} at ({x}, {y}): {gravity_status} | {fzonks_status} | {fenemies_status}{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
 
 
 def fill_area_randomly(x1: int, y1: int, x2: int, y2: int, item: int, num: int, keep_intact: int | bool = False):
@@ -532,7 +532,7 @@ def fill_area_randomly(x1: int, y1: int, x2: int, y2: int, item: int, num: int, 
     for index in selection_table:
         cur_grid.change_element_by_index(index=index, element=item)
         
-    return f"Randomized item {item} sucessfully.\n\n{cur_grid.render_grid()}"
+    return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Randomized item {item} sucessfully.{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
 
 
 def replace_item_for_new_in_area(x1: int, y1: int, x2: int, y2: int, old_item: int, new_item: int) -> str:
@@ -554,7 +554,7 @@ def replace_item_for_new_in_area(x1: int, y1: int, x2: int, y2: int, old_item: i
         if cur_grid.level['level'][index] == old_item:
             cur_grid.change_element_by_index(index, new_item)
             
-    return f"Operation completed with no errors.\n\n{cur_grid.render_grid()}"
+    return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Operation completed with no errors.{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
 
 
 def save_level_sp_format(path: str = '') -> str:    
@@ -562,10 +562,10 @@ def save_level_sp_format(path: str = '') -> str:
         if not cur_grid.filepath:
             cur_levelset_editor.levelset[int(cur_grid.level_number) - 1] = cur_grid.level
             levelset_scrn.update_state(cur_levelset_editor.render_list())
-            return f"Level version updated! After you're done, quit and save the whole levelset to apply changes.\n\n{cur_grid.render_grid()}"
+            return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Level version updated! After you're done, quit and save the whole levelset to apply changes.{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
         
         supaparse.write_sp_file(cur_grid.filepath, cur_grid.level)
-        return f"Saved at {cur_grid.filepath}.\n\n{cur_grid.render_grid()}"
+        return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Saved at {cur_grid.filepath}.{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
     
     exists_as_given: bool = os.path.exists(os.path.dirname(path))
     exists_as_joint_path: bool = os.path.exists(os.path.join(cur_dir, os.path.dirname(path)))
@@ -581,7 +581,7 @@ def save_level_sp_format(path: str = '') -> str:
         raise FileNotFoundError('the selected path does not exist')
     
     supaparse.write_sp_file(path_to_create, cur_grid.level)
-    return f"Saved at {path_to_create}.\n\n{cur_grid.render_grid()}"
+    return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Saved at {path_to_create}.{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
 
 
 def save_level_sp_format_quit(path: str = '') -> screen.Context:
@@ -602,14 +602,14 @@ def test_level_supaplex_online() -> str:
     
     simple_webbrowser.website(testing_url)
     
-    return f"Testing level...\n\n{cur_grid.render_grid()}"
+    return f"{PARSER.colormap['INFO_BACKGROUND']}{PARSER.colormap['INFO_FOREGROUND']}Testing level...{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
 
 
 def verify_exit_murphy() -> str:
     if cur_grid.murphy_count > 0 and cur_grid.exit_count > 0:
-        return f"The level has Murphies and Exits! Good job :)\n\n{cur_grid.render_grid()}"
+        return f"{PARSER.colormap['INFO_BACKGROUND']}{PARSER.colormap['INFO_FOREGROUND']}The level has Murphies and Exits! Good job :){PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
     
-    return f"Hmmm... The levels is lacking either Murphies or Exits :(\n\n{cur_grid.render_grid()}"
+    return f"{PARSER.colormap['WARNING_BACKGROUND']}{PARSER.colormap['WARNING_FOREGROUND']}Hmmm... The levels is lacking either Murphies or Exits :({PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
 
 
 def set_selection_outline(x1: int, y1: int, x2: int, y2: int, item: int) -> str:
@@ -633,7 +633,7 @@ def set_selection_outline(x1: int, y1: int, x2: int, y2: int, item: int) -> str:
     for index in border_down + border_left + border_right + border_up:
         cur_grid.change_element_by_index(index, item)
 
-    return f"Done!\n\n{cur_grid.render_grid()}"
+    return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Done!{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
 
 
 def display_element_information(item: int) -> str: # [i] 'wtf' command
@@ -654,7 +654,7 @@ def display_element_information(item: int) -> str: # [i] 'wtf' command
     
     explosive: str = 'Explosive' if details[4] is True else 'Not Explosive'
 
-    return f"Element #{item}: {name} (Symbol {symbol_code}; {sprite_type}; {destructible}; {explosive})"
+    return f"{PARSER.colormap['INFO_BACKGROUND']}{PARSER.colormap['INFO_FOREGROUND']}Element #{item}: {name} (Symbol {symbol_code}; {sprite_type}; {destructible}; {explosive}){PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
     
 
 def quit_to_home_scrn() -> screen.Context:
@@ -672,7 +672,7 @@ def reload_current_screen() -> screen.Context:
 
 def open_repository_on_browser() -> str:
     simple_webbrowser.website('https://github.com/MF366-Coding/TSpE')
-    return f":)\n\n{RENDER_CONTEXT}"
+    return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}:){PARSER.colormap['RESET_ALL']}\n\n{TITLE}"
 
 
 def check_for_updates():
@@ -686,9 +686,9 @@ def check_for_updates():
             LATEST = data['tag_name']
             
         except requests.RequestException:
-            return f"Could not get the latest release :(\n\n{RENDER_CONTEXT}"
+            return f"{PARSER.colormap['WARNING_BACKGROUND']}{PARSER.colormap['WARNING_FOREGROUND']}Could not get the latest release :({PARSER.colormap['RESET_ALL']}\n\n{TITLE}"
     
-    return f"Latest Stable: {LATEST} || Current Version: {VERSION}"
+    return f"{PARSER.colormap['INFO_BACKGROUND']}{PARSER.colormap['INFO_FOREGROUND']}Latest Stable: {LATEST} || Current Version: {VERSION}{PARSER.colormap['RESET_ALL']}\n\n{TITLE}"
 
 
 def create_new_levelset(path: str):
@@ -769,7 +769,7 @@ def add_level_to_levelset(path: str):
     
     cur_levelset_editor.normalize_levelset()
     
-    return f"Level {path_to_open} has been added to the levelset.\n\n{cur_levelset_editor.render_list()}"
+    return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Level {path_to_open} has been added to the levelset.{PARSER.colormap['RESET_ALL']}\n\n{cur_levelset_editor.render_list()}"
 
 
 def create_new_level_inside_levelset():
@@ -782,7 +782,7 @@ def create_new_level_inside_levelset():
     cur_levelset_editor.levelset.levelset.append(supaparse.generate_empty_sp_level_as_dict())
     cur_levelset_editor.normalize_levelset()
     
-    return f"A new empty level has been added to the levelset.\n\n{cur_levelset_editor.render_list()}"
+    return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}A new empty level has been added to the levelset.{PARSER.colormap['RESET_ALL']}\n\n{cur_levelset_editor.render_list()}"
 
 
 def duplicate_level_in_levelset(level_num: int):
@@ -799,7 +799,7 @@ def duplicate_level_in_levelset(level_num: int):
     cur_levelset_editor.levelset.levelset.append(level_data)
     cur_levelset_editor.normalize_levelset()
     
-    return f"Level {level_num} has been duplicated.\n\n{cur_levelset_editor.render_list()}"
+    return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Level {level_num} has been duplicated.{PARSER.colormap['RESET_ALL']}\n\n{cur_levelset_editor.render_list()}"
 
 
 def edit_level_from_levelset(level_num: int) -> screen.Context:
@@ -830,7 +830,7 @@ def remove_level_from_levelset(level_num: int):
     cur_levelset_editor.prioritize_edited_levels()
     cur_levelset_editor.normalize_levelset()
     
-    return f"Done.\n\n{cur_levelset_editor.render_list()}"
+    return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Done.{PARSER.colormap['RESET_ALL']}\n\n{cur_levelset_editor.render_list()}"
 
 
 def save_levelset(path: str = '') -> str:
@@ -838,7 +838,7 @@ def save_levelset(path: str = '') -> str:
     
     if not path:
         cur_levelset_editor.levelset.write_file(cur_levelset_editor.filepath)
-        return f"Saved at: {cur_levelset_editor.filepath}\n\n{cur_levelset_editor.render_list()}"
+        return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Saved at: {cur_levelset_editor.filepath}{PARSER.colormap['RESET_ALL']}\n\n{cur_levelset_editor.render_list()}"
     
     exists_as_given: bool = os.path.exists(os.path.dirname(path))
     exists_as_joint_path: bool = os.path.exists(os.path.join(cur_dir, os.path.dirname(path)))
@@ -854,7 +854,7 @@ def save_levelset(path: str = '') -> str:
         raise FileNotFoundError('the selected path does not exist')
     
     cur_levelset_editor.levelset.write_file(path_to_create)
-    return f"Saved at: {path_to_create}\n\n{cur_levelset_editor.render_list()}"
+    return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Saved at: {path_to_create}{PARSER.colormap['RESET_ALL']}\n\n{cur_levelset_editor.render_list()}"
 
 
 def save_levelset_quit(path: str = '') -> screen.Context:
@@ -877,7 +877,7 @@ def swap_levels_in_levelset(level_a: int, level_b: int):
     cur_levelset_editor.prioritize_edited_levels()
     cur_levelset_editor.normalize_levelset()
     
-    return f"Swapped levels {level_a} and {level_b}.\n\n{cur_levelset_editor.render_list()}"
+    return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Swapped levels {level_a} and {level_b}.{PARSER.colormap['RESET_ALL']}\n\n{cur_levelset_editor.render_list()}"
 
 
 def quit_level_editor() -> screen.Context:
@@ -917,6 +917,7 @@ home_commands: list[screen.Command] = [
 level_attributes_args: list[screen.OptionalArgument] = [screen.OptionalArgument('infotrons', -1, 'int'), screen.OptionalArgument('gravity', -1, 'int'),
                                                         screen.OptionalArgument('frozen_zonks', -1, 'int'), screen.OptionalArgument(name='level_name', default_value=DEFAULT_PLACEHOLDER)]
 editor_change_args: list[screen.Argument] = [screen.Argument('x', 'int'), screen.Argument('y', 'int'), screen.Argument('new_item', 'int')]
+editor_checkers_args = [screen.Argument('x1', 'int'), screen.Argument('y1', 'int'), screen.Argument('x2', 'int'), screen.Argument('y2', 'int'), screen.Argument('item1', 'int'), screen.Argument('item2', 'int')]
 
 editor_commands: list[screen.Command] = [
     screen.Command("attributes", level_attributes_args, edit_level_properties),
