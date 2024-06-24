@@ -29,49 +29,300 @@
     "testProviders": {},
     "templates": {},
     "spElems": {
-        "0": ["Empty Space", "0", null, false, false],
-        "1": ["Zonk", "(-)", null, true, false],
-        "2": ["Base", "*", null, true, false],
-        "3": ["Murphy", "M", null, true, true],
-        "4": ["Infotron", "+", null, true, false],
-        "5": ["Standard RAM Chip", "$", false, true, false],
-        "6": ["Standard Hardware", "X", false, false, false],
-        "7": ["Exit", "E", null, true, false],
-        "8": ["Orange Disk", ";", null, true, true],
-        "9": ["Port Left - Right", ">", null, true, false],
-        "10": ["Port Up - Down", "q", null, true, false],
-        "11": ["Port Right - Left", "<", null, true, false],
-        "12": ["Port Down - Up", "d", null, true, false],
-        "13": ["Special Port Left - Right", "»", null, true, false],
-        "14": ["Special Port Up - Down", "qq", null, true, false],
-        "15": ["Special Port Right - Left", "«", null, true, false],
-        "16": ["Special Port Down - Up", "dd", null, true, false],
-        "17": ["Snik Snak", "€", null, true, true],
-        "18": ["Yellow Disk", "[]", null, true, true],
-        "19": ["Terminal", "T", null, true, false],
-        "20": ["Red Disk", "{}", null, true, true],
-        "21": ["Vertical Port", "dq", null, true, false],
-        "22": ["Horizontal Port", "<>", null, true, false],
-        "23": ["Cross Port", "<^>", null, true, false],
-        "24": ["Electron", "@", null, true, true],
-        "25": ["Bug", "~", null, true, false],
-        "26": ["Left RAM Chip", "->", true, true, false],
-        "27": ["Right RAM Chip", "<-", true, true, false],
-        "28": ["Fancy Hardware", "/=", true, false, false],
-        "29": ["Green Lamp Hardware", "29", true, false, false],
-        "30": ["Blue Lamp Hardware", "30", true, false, false],
-        "31": ["Red Lamp Hardware", "1/Z", true, false, false],
-        "32": ["Yellow Stripes Hardware", "!/A", true, false, false],
-        "33": ["Hardware Resistor", "33", true, false, false],
-        "34": ["Hardware Capacitor", "34", true, false, false],
-        "35": ["Hardware Colorful Horizontal Resistors", "35", true, false, false],
-        "36": ["Hardware Vertical Resistors", "36", true, false, false],
-        "37": ["Hardware Horizontal Resistors", "37", true, false, false],
-        "38": ["Top RAM Chip", "(^)", true, true, false],
-        "39": ["Bottom RAM Chip", "39", true, true, false],
-        "40": ["Invisible Wall", "&", null, true, false],
-        "41": ["Trash", "!X", null, null, null]
-
+        "0": [
+            "Empty Space",
+            "0",
+            null,
+            false,
+            false
+        ],
+        "1": [
+            "Zonk",
+            "(-)",
+            null,
+            true,
+            false
+        ],
+        "2": [
+            "Base",
+            "*",
+            null,
+            true,
+            false
+        ],
+        "3": [
+            "Murphy",
+            "M",
+            null,
+            true,
+            true
+        ],
+        "4": [
+            "Infotron",
+            "+",
+            null,
+            true,
+            false
+        ],
+        "5": [
+            "Standard RAM Chip",
+            "$",
+            false,
+            true,
+            false
+        ],
+        "6": [
+            "Standard Hardware",
+            "X",
+            false,
+            false,
+            false
+        ],
+        "7": [
+            "Exit",
+            "E",
+            null,
+            true,
+            false
+        ],
+        "8": [
+            "Orange Disk",
+            ";",
+            null,
+            true,
+            true
+        ],
+        "9": [
+            "Port Left - Right",
+            ">",
+            null,
+            true,
+            false
+        ],
+        "10": [
+            "Port Up - Down",
+            "q",
+            null,
+            true,
+            false
+        ],
+        "11": [
+            "Port Right - Left",
+            "<",
+            null,
+            true,
+            false
+        ],
+        "12": [
+            "Port Down - Up",
+            "d",
+            null,
+            true,
+            false
+        ],
+        "13": [
+            "Special Port Left - Right",
+            "\u00bb",
+            null,
+            true,
+            false
+        ],
+        "14": [
+            "Special Port Up - Down",
+            "qq",
+            null,
+            true,
+            false
+        ],
+        "15": [
+            "Special Port Right - Left",
+            "\u00ab",
+            null,
+            true,
+            false
+        ],
+        "16": [
+            "Special Port Down - Up",
+            "dd",
+            null,
+            true,
+            false
+        ],
+        "17": [
+            "Snik Snak",
+            "\u20ac",
+            null,
+            true,
+            true
+        ],
+        "18": [
+            "Yellow Disk",
+            "[]",
+            null,
+            true,
+            true
+        ],
+        "19": [
+            "Terminal",
+            "T",
+            null,
+            true,
+            false
+        ],
+        "20": [
+            "Red Disk",
+            "{}",
+            null,
+            true,
+            true
+        ],
+        "21": [
+            "Vertical Port",
+            "dq",
+            null,
+            true,
+            false
+        ],
+        "22": [
+            "Horizontal Port",
+            "<>",
+            null,
+            true,
+            false
+        ],
+        "23": [
+            "Cross Port",
+            "<^>",
+            null,
+            true,
+            false
+        ],
+        "24": [
+            "Electron",
+            "@",
+            null,
+            true,
+            true
+        ],
+        "25": [
+            "Bug",
+            "~",
+            null,
+            true,
+            false
+        ],
+        "26": [
+            "Left RAM Chip",
+            "->",
+            true,
+            true,
+            false
+        ],
+        "27": [
+            "Right RAM Chip",
+            "<-",
+            true,
+            true,
+            false
+        ],
+        "28": [
+            "Fancy Hardware",
+            "/=",
+            true,
+            false,
+            false
+        ],
+        "29": [
+            "Green Lamp Hardware",
+            "29",
+            true,
+            false,
+            false
+        ],
+        "30": [
+            "Blue Lamp Hardware",
+            "30",
+            true,
+            false,
+            false
+        ],
+        "31": [
+            "Red Lamp Hardware",
+            "1/Z",
+            true,
+            false,
+            false
+        ],
+        "32": [
+            "Yellow Stripes Hardware",
+            "!/A",
+            true,
+            false,
+            false
+        ],
+        "33": [
+            "Hardware Resistor",
+            "33",
+            true,
+            false,
+            false
+        ],
+        "34": [
+            "Hardware Capacitor",
+            "34",
+            true,
+            false,
+            false
+        ],
+        "35": [
+            "Hardware Colorful Horizontal Resistors",
+            "35",
+            true,
+            false,
+            false
+        ],
+        "36": [
+            "Hardware Vertical Resistors",
+            "36",
+            true,
+            false,
+            false
+        ],
+        "37": [
+            "Hardware Horizontal Resistors",
+            "37",
+            true,
+            false,
+            false
+        ],
+        "38": [
+            "Top RAM Chip",
+            "(^)",
+            true,
+            true,
+            false
+        ],
+        "39": [
+            "Bottom RAM Chip",
+            "39",
+            true,
+            true,
+            false
+        ],
+        "40": [
+            "Invisible Wall",
+            "&",
+            null,
+            true,
+            false
+        ],
+        "41": [
+            "Trash",
+            "!X",
+            null,
+            null,
+            null
+        ]
     },
     "elemDisplayType": "decimal",
     "allowByteEdit": false,
@@ -79,7 +330,7 @@
     "allowEvaluate": false,
     "allowDelete": false,
     "useOnlineHelp": false,
-    "logging": true ,
+    "logging": true,
     "ignoreWeirdUseOfFileExtensions": true,
     "cellCapacity": 5
 }

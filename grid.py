@@ -49,7 +49,7 @@ class Grid:
         if cell_capacity < 4:
             raise CapacityError('the cell capacity for the grid must be higher than 4')
         
-        number_of_signs: int = cell_capacity * width + width - 1
+        number_of_signs: int = cell_capacity * (width + 1) + width
         
         self._CELL_CAPACITY: int = cell_capacity
         self._GIVEN_PATH = filepath
@@ -196,11 +196,23 @@ class Grid:
         return self._level_num
         
     def render_grid(self) -> str:
-        visual_grid: str = VERTICAL_LINE
+        visual_grid: str = f"{VERTICAL_LINE}{'y/x'.center(self._CELL_CAPACITY)}{VERTICAL_LINE}"
         
-        for i in range(self._HEIGHT):
-            for _ in range(self._WIDTH):
-                spam: str = self.convert_display_type(element=self._LEVEL['level'][i]).center(self._CELL_CAPACITY, ' ')
+        for i in range(self._HEIGHT + 1):
+            if i == 0:
+                eggs = ''
+                
+                for j in range(self._WIDTH):
+                    eggs += f"{str(j).center(self._CELL_CAPACITY)}{VERTICAL_LINE}"
+                
+                eggs += '\n'
+                visual_grid += f"{eggs}{VERTICAL_LINE}{self.HSEP}{VERTICAL_LINE}\n{VERTICAL_LINE}"
+                continue
+            
+            visual_grid += f"{str(i - 1).center(self._CELL_CAPACITY)}{VERTICAL_LINE}" 
+                
+            for k in range(self._WIDTH):
+                spam: str = self.convert_display_type(element=self._LEVEL['level'][self.get_index_from_coord(k, i - 1)]).center(self._CELL_CAPACITY, ' ')
                 
                 if len(spam) > self._CELL_CAPACITY:
                     raise CapacityError('an element that has a bigger lenght than the capacity was received but is not allowed')
@@ -209,7 +221,8 @@ class Grid:
                 
             visual_grid += f'\n║{self.HSEP}║\n║'
         
-        visual_grid = '\n'.join(visual_grid.split('\n')[0:-2])
+        list_grid = visual_grid.split('\n')[0:-2]
+        visual_grid = '\n'.join(list_grid)
         
         return f"""
 

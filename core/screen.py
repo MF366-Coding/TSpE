@@ -259,11 +259,11 @@ class Command:
                         raise ArgTypeError(f'expected boolean value but got "{given_arg.lower().strip()}"')
 
                 case 'int':
-                    if given_arg.strip().isdigit():
+                    if str(given_arg).replace('-', '0').strip().isdigit():
                         arg_list.append(int(given_arg))
 
                     else:
-                        raise ArgTypeError(f'expected integer value but got "{given_arg.strip()}"')
+                        raise ArgTypeError(f'expected integer value but got "{str(given_arg).strip()}"')
 
                 case _:
                     arg_list.append(given_arg)

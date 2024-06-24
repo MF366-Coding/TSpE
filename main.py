@@ -24,7 +24,7 @@ class LevelNotFoundError(Exception): ...
 VERSION = "v0.0.1"
 LATEST = None
 
-RENDER_CONTEXT = '!/CURRENTRENDERCONTEXTASISNOCHANGE/' # [!] deprecated
+RENDER_CONTEXT = '!/CURRENTRENDERCONTEXTASISNOCHANGE/' # [!] deprecated, due to buggy behavior
 DEFAULT_PLACEHOLDER = "default_value_placeholder_check_for_existing_value"
 SUPAPLEX_ONLINE_TEST_BASE_URL = 'https://www.supaplex.online/test/#gz,' # [i] thanks Greg :)
 
@@ -386,18 +386,17 @@ def look_for_element_occurence(element: int, skip_counter: int = 0):
     item_coords: tuple[int, int] | None = None
 
     for index in range(supaparse.BYTES_PER_SP_LEVEL_DATA):
-        if skip_counter <= 0:
+        if skip_counter < 0:
             break
         
         if cur_grid.level['level'][index] != element:
             continue
 
         if cur_grid.level['level'][index] == element:            
-            if skip_counter > 0:
+            if skip_counter >= 0:
                 skip_counter -= 1
+                item_coords = cur_grid.get_coord_from_index(index)
                 continue
-
-            item_coords = cur_grid.get_coord_from_index(index)
             
     if item_coords is None:
         return f"{PARSER.colormap['WARNING_BACKGROUND']}{PARSER.colormap['WARNING_FOREGROUND']}Element #{element} not found{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
@@ -517,17 +516,16 @@ def fill_area_randomly(x1: int, y1: int, x2: int, y2: int, item: int, num: int, 
         num = len(selection_table)
     
     for index, match in enumerate(selection_table.copy(), 0):
-        if num < 1:
+        if num == 0:
             break
         
-        if keep_intact and cur_grid.level['level'][match] != 0:
-            selection_table.pop(index)
-        
-        if random.choice((True, False)):
-            num -= 1
-            continue
+        if random.choice((True, False, False)):
+            if keep_intact and cur_grid.level['level'][match] != 0:
+                continue
             
-        selection_table.pop(index)
+            num -= 1
+            selection_table.pop(index)
+            continue
         
     for index in selection_table:
         cur_grid.change_element_by_index(index=index, element=item)
@@ -911,13 +909,27 @@ home_commands: list[screen.Command] = [
     screen.Command('open', home_cd_del_args, open_level_on_editor),
     screen.Command('o', home_cd_del_args, open_level_on_editor),
     screen.Command('ol', home_cd_del_args, open_level_on_editor),
-    screen.Command('spfix', [], open_spfix_documentation)
+    screen.Command('spfix', [], open_spfix_documentation),
+    screen.Command('nls', [screen.Argument('path', 'str')], create_new_levelset),
+    screen.Command('ols', [screen.Argument('path', 'str')], open_existing_levelset),
+    screen.Command('update', [], check_for_updates),
+    screen.Command('quit', [], quit_app),
+    screen.Command('q', [], quit_app),
+    screen.Command('exit', [], quit_app),
+    screen.Command('leave', [], quit_app),
+    screen.Command('logout', [], quit_app),
+    screen.Command('reload', [], reload_current_screen),
+    screen.Command('rl', [], reload_current_screen),
+    screen.Command('web', [], open_repository_on_browser),
+    screen.Command('repo', [], open_repository_on_browser)
 ]
 
 level_attributes_args: list[screen.OptionalArgument] = [screen.OptionalArgument('infotrons', -1, 'int'), screen.OptionalArgument('gravity', -1, 'int'),
                                                         screen.OptionalArgument('frozen_zonks', -1, 'int'), screen.OptionalArgument(name='level_name', default_value=DEFAULT_PLACEHOLDER)]
 editor_change_args: list[screen.Argument] = [screen.Argument('x', 'int'), screen.Argument('y', 'int'), screen.Argument('new_item', 'int')]
-editor_checkers_args = [screen.Argument('x1', 'int'), screen.Argument('y1', 'int'), screen.Argument('x2', 'int'), screen.Argument('y2', 'int'), screen.Argument('item1', 'int'), screen.Argument('item2', 'int')]
+editor_checkers_args = [screen.Argument('x1', 'int'), screen.Argument('y1', 'int'), screen.Argument('x2', 'int'), screen.Argument('y2', 'int'), screen.Argument('item_1', 'int'), screen.Argument('item_2', 'int')]
+editor_selection_args = [screen.Argument('x1', 'int'), screen.Argument('y1', 'int'), screen.Argument('x2', 'int'), screen.Argument('y2', 'int'), screen.Argument('item', 'int')]
+editor_coord_args = [screen.Argument('x', 'int'), screen.Argument('y', 'int')]
 
 editor_commands: list[screen.Command] = [
     screen.Command("attributes", level_attributes_args, edit_level_properties),
@@ -927,10 +939,74 @@ editor_commands: list[screen.Command] = [
     screen.Command('borders', [screen.Argument('new_item', 'int')], change_level_borders),
     screen.Command('outline', [screen.Argument('new_item', 'int')], change_level_borders),
     screen.Command('change', editor_change_args, change_item_in_grid),
-    screen.Command('ch', editor_change_args, change_item_in_grid)
+    screen.Command('ch', editor_change_args, change_item_in_grid),
+    screen.Command('checkers', editor_checkers_args, change_grid_with_checkers_pattern),
+    screen.Command('chess', editor_checkers_args, change_grid_with_checkers_pattern),
+    screen.Command('board', editor_checkers_args, change_grid_with_checkers_pattern),
+    screen.Command('container', editor_selection_args, fill_square_area),
+    screen.Command('square', editor_selection_args, fill_square_area),
+    screen.Command('erase', editor_coord_args, erase_grid_entry),
+    screen.Command('er', editor_coord_args, erase_grid_entry),
+    screen.Command('fill', [screen.Argument('item', 'int')], fill_grid_with_elem),
+    screen.Command('fillall', [screen.Argument('item', 'int')], fill_grid_with_elem_alt),
+    screen.Command('match', [screen.Argument('element', 'int'), screen.OptionalArgument('skip_counter', 0, 'int')], look_for_element_occurence),
+    screen.Command('portedit', editor_coord_args + [screen.OptionalArgument('gravity', -1, 'int'), screen.OptionalArgument('frozen_zonks', -1, 'int'), screen.OptionalArgument('frozen_enemies', -1, 'int'), screen.OptionalArgument('unused_byte', -1, 'int')], edit_special_port_properties),
+    screen.Command('ported', editor_coord_args + [screen.OptionalArgument('gravity', -1, 'int'), screen.OptionalArgument('frozen_zonks', -1, 'int'), screen.OptionalArgument('frozen_enemies', -1, 'int'), screen.OptionalArgument('unused_byte', -1, 'int')], edit_special_port_properties),
+    screen.Command('pe', editor_coord_args + [screen.OptionalArgument('gravity', -1, 'int'), screen.OptionalArgument('frozen_zonks', -1, 'int'), screen.OptionalArgument('frozen_enemies', -1, 'int'), screen.OptionalArgument('unused_byte', -1, 'int')], edit_special_port_properties),
+    screen.Command('portinfo', editor_coord_args, view_special_port_properties),
+    screen.Command('pinfo', editor_coord_args, view_special_port_properties),
+    screen.Command('pinf', editor_coord_args, view_special_port_properties),
+    screen.Command('random', editor_selection_args + [screen.Argument('num', 'int'), screen.OptionalArgument('keep_intact', False, 'bool')], fill_area_randomly),
+    screen.Command('rand', editor_selection_args + [screen.Argument('num', 'int'), screen.OptionalArgument('keep_intact', False, 'bool')], fill_area_randomly),
+    screen.Command('replace', [screen.Argument('x1', 'int'), screen.Argument('y1', 'int'), screen.Argument('x2', 'int'), screen.Argument('y2', 'int'), screen.Argument('old_item', 'int'), screen.Argument('new_item', 'int')], replace_item_for_new_in_area),
+    screen.Command('rep', [screen.Argument('x1', 'int'), screen.Argument('y1', 'int'), screen.Argument('x2', 'int'), screen.Argument('y2', 'int'), screen.Argument('old_item', 'int'), screen.Argument('new_item', 'int')], replace_item_for_new_in_area),
+    screen.Command('save', [screen.OptionalArgument('path', '', 'str')], save_level_sp_format),
+    screen.Command('s', [screen.OptionalArgument('path', '', 'str')], save_level_sp_format),
+    screen.Command('savequit', [screen.OptionalArgument('path', '', 'str')], save_level_sp_format_quit),
+    screen.Command('sq', [screen.OptionalArgument('path', '', 'str')], save_level_sp_format_quit),
+    screen.Command('sotest', [], test_level_supaplex_online),
+    screen.Command('verify', [], verify_exit_murphy),
+    screen.Command('walls', editor_selection_args, set_selection_outline),
+    screen.Command('wls', editor_selection_args, set_selection_outline),
+    screen.Command('web', [], open_repository_on_browser),
+    screen.Command('repo', [], open_repository_on_browser),
+    screen.Command('wtf', [screen.Argument('item', 'int')], display_element_information),
+    screen.Command('wth', [screen.Argument('item', 'int')], display_element_information),
+    screen.Command('quit', [], quit_level_editor),
+    screen.Command('exit', [], quit_level_editor),
+    screen.Command('leave', [], quit_level_editor),
+    screen.Command('q', [], quit_level_editor),
+    screen.Command('reload', [], reload_current_screen),
+    screen.Command('rl', [], reload_current_screen)
+]
+
+levelset_commands = [
+    screen.Command('add', [screen.Argument('path', 'str')], add_level_to_levelset),
+    screen.Command('create', [], create_new_level_inside_levelset),
+    screen.Command('duplicate', [screen.Argument('level_num', 'int')], duplicate_level_in_levelset),
+    screen.Command('dup', [screen.Argument('level_num', 'int')], duplicate_level_in_levelset),
+    screen.Command('edit', [screen.Argument('level_num', 'int')], edit_level_from_levelset),
+    screen.Command('ed', [screen.Argument('level_num', 'int')], edit_level_from_levelset),
+    screen.Command('remove', [screen.Argument('level_num', 'int')], remove_level_from_levelset),
+    screen.Command('rm', [screen.Argument('level_num', 'int')], remove_level_from_levelset),
+    screen.Command('save', [screen.OptionalArgument('path', '')], save_levelset),
+    screen.Command('s', [screen.OptionalArgument('path', '')], save_levelset),
+    screen.Command('savequit', [screen.OptionalArgument('path', '')], save_levelset_quit),
+    screen.Command('sq', [screen.OptionalArgument('path', '')], save_levelset_quit),
+    screen.Command('swap', [screen.Argument('level_a', 'int'), screen.Argument('level_b', 'int')], swap_levels_in_levelset),
+    screen.Command('quit', [], quit_to_home_scrn),
+    screen.Command('exit', [], quit_to_home_scrn),
+    screen.Command('leave', [], quit_to_home_scrn),
+    screen.Command('q', [], quit_to_home_scrn),
+    screen.Command('reload', [], reload_current_screen),
+    screen.Command('rl', [], reload_current_screen),
+    screen.Command('web', [], open_repository_on_browser),
+    screen.Command('repo', [], open_repository_on_browser)
 ]
 
 home_scrn.add_several_commands(home_commands)
+editor_scrn.add_several_commands(editor_commands)
+levelset_scrn.add_several_commands(levelset_commands)
 
 SCREEN = screen.Screen(PARSER.colormap, home_scrn)
 home_scrn.register_screen(SCREEN)
