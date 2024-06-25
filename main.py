@@ -270,7 +270,7 @@ def edit_level_properties(infotrons: int = -1, gravity: bool | int = -1, frozen_
     if infotrons > 255:
         raise SupaplexStructureError("max number of needed infotrons mustn't exceed 255")
 
-    if infotrons >= 0:
+    if infotrons > 0:
         cur_grid.level['number_of_infotrons_needed'] = infotrons
 
     if gravity >= 0:

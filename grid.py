@@ -228,8 +228,8 @@ class Grid:
 
 LEVEL {self._level_num}: {supaparse.bytes_to_string(self._LEVEL['level_title'])}
 Gravity {'OFF' if not self._LEVEL['initial_gravitation'] else 'ON'} | Frozen Zonks {'ON' if self._LEVEL['initial_freeze_zonks'] == 2 else 'OFF'}
-{CHANGEMELATER} / {self._LEVEL['number_of_infotrons_needed'] if self._LEVEL['number_of_infotrons_needed'] != 0 else CHANGEMELATER} Infotrons | {CHANGEMELATER} Electrons
-{CHANGEMELATER} special ports
+{self._infotrons} / {self._LEVEL['number_of_infotrons_needed'][0] if self._LEVEL['number_of_infotrons_needed'][0] != 0 else f'{self._infotrons} (All)'} Infotrons | {self._LEVEL['level'].count(24)} Electrons
+{self._LEVEL['number_of_special_ports'][0]} special ports
 ╔{self.HSEP}╗
 {visual_grid}
 ╚{self.HSEP}╝
@@ -265,4 +265,3 @@ Gravity {'OFF' if not self._LEVEL['initial_gravitation'] else 'ON'} | Frozen Zon
     @property
     def exit_count(self):
         return self._exits
-        
