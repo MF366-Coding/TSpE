@@ -28,6 +28,11 @@ RENDER_CONTEXT = '!/CURRENTRENDERCONTEXTASISNOCHANGE/' # [!] deprecated, due to 
 DEFAULT_PLACEHOLDER = "default_value_placeholder_check_for_existing_value"
 SUPAPLEX_ONLINE_TEST_BASE_URL = 'https://www.supaplex.online/test/#gz,' # [i] thanks Greg :)
 
+
+# TODO
+# [!!] i need to test the app gawdamn it!
+
+
 if len(sys.argv) > 1:
     PARSER = settings.SettingsParser(sys.argv[1])
 
