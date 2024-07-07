@@ -81,7 +81,11 @@ def change_directory(path: str) -> str:
     if path == '~':
         cur_dir = os.path.expanduser('~')
         return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Working Directory is now set to: {cur_dir}{PARSER.colormap['RESET_ALL']}\n\n{TITLE}"
-
+    
+    if path == '.':
+        # [i] do nothing as a dot means the current directory
+        return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Working Directory is now set to: {cur_dir}{PARSER.colormap['RESET_ALL']}\n\n{TITLE}"
+    
     exists_as_given: bool = os.path.exists(path)
     exists_as_joint_path: bool = os.path.exists(os.path.join(cur_dir, path))
     path_to_change_to = False
@@ -276,18 +280,15 @@ def edit_level_properties(infotrons: int = -1, gravity: bool | int = -1, frozen_
         raise SupaplexStructureError("max number of needed infotrons mustn't exceed 255")
 
     if infotrons > 0:
-        cur_grid.level['number_of_infotrons_needed'] = infotrons
+        cur_grid.level['number_of_infotrons_needed'][0] = infotrons
 
     if gravity >= 0:
-        gravity = supaparse.clamp_value(gravity, 0, 8)
-        cur_grid.level['initial_gravitation'] = [gravity]
+        gravity = supaparse.clamp_value(gravity, 0, 1)
+        cur_grid.level['initial_gravitation'][0] = gravity
 
-    if frozen_zonks >= 0:
-        if frozen_zonks > 2:
-            frozen_zonks = 0
-
-        frozen_zonks = supaparse.clamp_value(frozen_zonks, 1, 2)
-        cur_grid.level['initial_freeze_zonks'] = [frozen_zonks]
+    if frozen_zonks > 0:
+        frozen_zonks = supaparse.clamp_value(frozen_zonks, 0, 255) + 1
+        cur_grid.level['initial_freeze_zonks'][0] = frozen_zonks
 
     if level_name != DEFAULT_PLACEHOLDER:
         bytetitle: list[int] = supaparse.string_to_bytetitle(level_name)
@@ -561,7 +562,7 @@ def replace_item_for_new_in_area(x1: int, y1: int, x2: int, y2: int, old_item: i
 
 
 def save_level_sp_format(path: str = '') -> str:    
-    if not path:
+    if not path.split():
         if not cur_grid.filepath:
             cur_levelset_editor.levelset[int(cur_grid.level_number) - 1] = cur_grid.level
             levelset_scrn.update_state(cur_levelset_editor.render_list())
@@ -815,7 +816,7 @@ def edit_level_from_levelset(level_num: int) -> screen.Context:
 
     level_details: dict[str, list[int]] = cur_levelset_editor.levelset[level_num - 1]
 
-    cur_grid = grid.Grid(level_details, PARSER.supaplex_element_database, PARSER.element_display_type, PARSER.grid_cell_capacity, 1)
+    cur_grid = grid.Grid(level_details, PARSER.supaplex_element_database, PARSER.element_display_type, PARSER.grid_cell_capacity, level_num)
     editor_scrn.update_state(cur_grid.render_grid())
     
     levelset_scrn.update_state(cur_levelset_editor.render_list())

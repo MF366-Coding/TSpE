@@ -11,4 +11,5 @@ import sys
 
 def leave_program(parser: settings.SettingsParser, code: Any = None):
     parser.save_settings()
+    print(parser.colormap['RESET_ALL']) # [i] reset background and foreground before leaving
     sys.exit(code)
