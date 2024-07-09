@@ -113,7 +113,7 @@ class Screen:
 
         if not __stdout:
             __outputter = sys.stderr
-
+        
         return __outputter.write(__s)
 
     def writelines(self, __iterable: list[str], __stdout: bool = True):

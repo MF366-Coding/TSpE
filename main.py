@@ -25,9 +25,10 @@ VERSION = "v0.0.1"
 LATEST = None
 
 RENDER_CONTEXT = '!/CURRENTRENDERCONTEXTASISNOCHANGE/' # [!] deprecated, due to buggy behavior
+# [!?] technically speaking, the render context special string is still implemented so it can still be used but it's buggy af
 DEFAULT_PLACEHOLDER = "default_value_placeholder_check_for_existing_value"
 SUPAPLEX_ONLINE_TEST_BASE_URL = 'https://www.supaplex.online/test/#gz,' # [i] thanks Greg :)
-
+TSPE_DIRECTORY = os.path.dirname(__file__)
 
 # TODO
 # [!!] i need to test the app gawdamn it!
@@ -41,15 +42,15 @@ else:
 
 TITLE = f'''
 
-{PARSER.colormap['ASCII_TITLE']}MMP""MM""YMM  .M"""bgd        `7MM"""YMM  
-P'   MM   `7 ,MI    "Y          MM    `7  
-     MM      `MMb.   `7MMpdMAo. MM   d    
-     MM        `YMMNq. MM   `Wb MMmmMM    
-     MM      .     `MM MM    M8 MM   Y  , 
-     MM      Mb     dM MM   ,AP MM     ,M 
-   .JMML.    P"Ybmmd"  MMbmmd'.JMMmmmmMMM 
-                       MM                 
-                     .JMML.     
+{PARSER.colormap['ASCII_TITLE']}MMP""MM""YMM  .M"""bgd        `7MM"""YMM
+P'   MM   `7 ,MI    "Y          MM    `7
+     MM      `MMb.   `7MMpdMAo. MM   d
+     MM        `YMMNq. MM   `Wb MMmmMM
+     MM      .     `MM MM    M8 MM   Y  ,
+     MM      Mb     dM MM   ,AP MM     ,M
+   .JMML.    P"Ybmmd"  MMbmmd'.JMMmmmmMMM
+                       MM
+                     .JMML.
 {PARSER.colormap['RESET']}
 {PARSER.colormap['TITLE_BACKGROUND']}{PARSER.colormap['TITLE_FOREGROUND']}TSpE
 {PARSER.colormap['AUTHOR_BACKGROUND']}{PARSER.colormap['AUTHOR_FOREGROUND']}MF366
@@ -81,11 +82,11 @@ def change_directory(path: str) -> str:
     if path == '~':
         cur_dir = os.path.expanduser('~')
         return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Working Directory is now set to: {cur_dir}{PARSER.colormap['RESET_ALL']}\n\n{TITLE}"
-    
+
     if path == '.':
         # [i] do nothing as a dot means the current directory
         return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Working Directory is now set to: {cur_dir}{PARSER.colormap['RESET_ALL']}\n\n{TITLE}"
-    
+
     exists_as_given: bool = os.path.exists(path)
     exists_as_joint_path: bool = os.path.exists(os.path.join(cur_dir, path))
     path_to_change_to = False
@@ -213,7 +214,7 @@ def new_level_on_editor(path: str, template_name: str = 'BLANK') -> screen.Conte
 
     if not path.lower().endswith('.sp') and not PARSER.allow_weird_extensions:
         raise FileExtensionError('weird use of file extension - should be SP (to always ignore this error, change "ignoreWeirdUseOfFileExtensions" in settings to true)')
-    
+
     exists_as_given: bool = os.path.exists(os.path.dirname(path))
     exists_as_joint_path: bool = os.path.exists(os.path.join(cur_dir, os.path.dirname(path)))
     path_to_create = False
@@ -226,7 +227,7 @@ def new_level_on_editor(path: str, template_name: str = 'BLANK') -> screen.Conte
 
     else:
         raise FileNotFoundError('the selected path does not exist')
-    
+
     if template_name not in PARSER.templates:
         level_details: dict[str, list[int]] = supaparse.generate_empty_sp_level_as_dict()
 
@@ -235,7 +236,7 @@ def new_level_on_editor(path: str, template_name: str = 'BLANK') -> screen.Conte
         level_details: dict[str, list[int]] = supaparse.interpret_sp_data(template_contents)
 
     supaparse.write_sp_file(path_to_create, level_details)
-    
+
     cur_grid = grid.Grid(level_details, PARSER.supaplex_element_database, PARSER.element_display_type, PARSER.grid_cell_capacity, 1, filepath=path_to_create)
     editor_scrn.update_state(cur_grid.render_grid())
 
@@ -342,14 +343,19 @@ def change_grid_with_checkers_pattern(x1: int, y1: int, x2: int, y2: int, item_1
 
     selection_table: list[int] = cur_grid.get_index_from_selection(x1, y1, x2, y2)
 
-    for num, index in enumerate(selection_table, 0):
-        if num == 0 or num % 2 == 0:
-            item = item_1
+    if (x2 - x1) % 2 == 0:
+        item_1_table = [selection_table[i] for i in range(len(selection_table)) if i % 2 == 0]
+        item_2_table = [selection_table[i] for i in range(len(selection_table)) if i % 2 != 0]
+    
+    else: # FIXME
+        item_1_table = [selection_table[i] for i in range(len(selection_table)) if i + 1 % 2 == 0]
+        item_2_table = [selection_table[i] for i in range(len(selection_table)) if i % 2 != 0]
 
-        else:
-            item = item_2
-
-        cur_grid.change_element_by_index(index, item)
+    for index in item_1_table:
+        cur_grid.change_element_by_index(index, item_1)
+        
+    for index in item_2_table:
+        cur_grid.change_element_by_index(index, item_2)
 
     return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Checker board recreated at ({x1}, {y1}) - ({x2}, {y2}) using elements {item_1} and {item_2}.{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
 
@@ -394,19 +400,19 @@ def look_for_element_occurence(element: int, skip_counter: int = 0):
     for index in range(supaparse.BYTES_PER_SP_LEVEL_DATA):
         if skip_counter < 0:
             break
-        
+
         if cur_grid.level['level'][index] != element:
             continue
 
-        if cur_grid.level['level'][index] == element:            
+        if cur_grid.level['level'][index] == element:
             if skip_counter >= 0:
                 skip_counter -= 1
                 item_coords = cur_grid.get_coord_from_index(index)
                 continue
-            
+
     if item_coords is None:
         return f"{PARSER.colormap['WARNING_BACKGROUND']}{PARSER.colormap['WARNING_FOREGROUND']}Element #{element} not found{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
-    
+
     return f"{PARSER.colormap['INFO_BACKGROUND']}{PARSER.colormap['INFO_FOREGROUND']}Element #{element} found at ({item_coords[0]}, {item_coords[1]}){PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
 
 
@@ -422,19 +428,19 @@ def edit_special_port_properties(x: int, y: int, gravity: int = -1, frozen_zonks
 
     if y < 0:
         raise ValueError('Y value cannot be lower than 0')
-    
+
     matching_index: int = cur_grid.get_index_from_coord(x, y)
-    
+
     if cur_grid.level['level'][matching_index] not in (13, 14, 15, 16):
         raise grid.ElementError('selected item is not a special port')
-    
+
     hi, lo = supaparse.calculate_special_port_hi_lo(x, y)
-    
+
     special_port_id: int = cur_grid.find_special_port_id(hi, lo)
-    
+
     if not special_port_id:
         raise grid.ElementError(f"couldn't find a special port with hi {hi} and lo {lo}")
-    
+
     if gravity >= 0:
         gravity = supaparse.clamp_value(gravity, 0, 8)
         cur_grid.level[f'special_port{special_port_id}'][2] = [gravity]
@@ -449,7 +455,7 @@ def edit_special_port_properties(x: int, y: int, gravity: int = -1, frozen_zonks
     if frozen_enemies >= 0:
         frozen_enemies = supaparse.clamp_value(frozen_enemies, 0, 1)
         cur_grid.level[f'special_port{special_port_id}'][4] = [frozen_enemies]
-        
+
     if unused_byte >= 0:
         unused_byte = supaparse.clamp_value(unused_byte, 0, 255)
         cur_grid.level[f'special_port{special_port_id}'][5] = [unused_byte]
@@ -469,34 +475,34 @@ def view_special_port_properties(x: int, y: int):
 
     if y < 0:
         raise ValueError('Y value cannot be lower than 0')
-    
+
     matching_index: int = cur_grid.get_index_from_coord(x, y)
-    
+
     if cur_grid.level['level'][matching_index] not in (13, 14, 15, 16):
         raise grid.ElementError('selected item is not a special port')
-    
+
     hi, lo = supaparse.calculate_special_port_hi_lo(x, y)
-    
+
     special_port_id: int = cur_grid.find_special_port_id(hi, lo)
-    
+
     if not special_port_id:
         raise grid.ElementError(f"couldn't find a special port with hi {hi} and lo {lo}")
-    
+
     if cur_grid.level[f'special_port{special_port_id}'][2] > 0:
         gravity_status = 'Gravity ON'
-    
+
     else:
         gravity_status = 'Gravity OFF'
 
     if cur_grid.level[f'special_port{special_port_id}'][3] == 2:
         fzonks_status = 'Freeze Zonks'
-    
+
     else:
         fzonks_status = 'Unfreeze Zonks'
-        
+
     if cur_grid.level[f'special_port{special_port_id}'][4] == 1:
         fenemies_status = 'Freeze Enemies'
-    
+
     else:
         fenemies_status = 'Unfreeze Enemies'
 
@@ -515,27 +521,27 @@ def fill_area_randomly(x1: int, y1: int, x2: int, y2: int, item: int, num: int, 
 
     if y1 < 0 or y2 < 0:
         raise ValueError('Y values cannot be lower than 0')
-    
+
     selection_table: list[int] = cur_grid.get_index_from_selection(x1, y1, x2, y2)
-    
+
     if num < 1:
         num = len(selection_table)
-    
+
     for index, match in enumerate(selection_table.copy(), 0):
         if num == 0:
             break
-        
+
         if random.choice((True, False, False)):
             if keep_intact and cur_grid.level['level'][match] != 0:
                 continue
-            
+
             num -= 1
             selection_table.pop(index)
             continue
-        
+
     for index in selection_table:
         cur_grid.change_element_by_index(index=index, element=item)
-        
+
     return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Randomized item {item} sucessfully.{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
 
 
@@ -551,26 +557,26 @@ def replace_item_for_new_in_area(x1: int, y1: int, x2: int, y2: int, old_item: i
 
     if y1 < 0 or y2 < 0:
         raise ValueError('Y values cannot be lower than 0')
-    
+
     selection_table: list[int] = cur_grid.get_index_from_selection(x1, y1, x2, y2)
 
     for index in selection_table:
         if cur_grid.level['level'][index] == old_item:
             cur_grid.change_element_by_index(index, new_item)
-            
+
     return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Operation completed with no errors.{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
 
 
-def save_level_sp_format(path: str = '') -> str:    
+def save_level_sp_format(path: str = '') -> str:
     if not path.split():
         if not cur_grid.filepath:
             cur_levelset_editor.levelset[int(cur_grid.level_number) - 1] = cur_grid.level
             levelset_scrn.update_state(cur_levelset_editor.render_list())
             return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Level version updated! After you're done, quit and save the whole levelset to apply changes.{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
-        
+
         supaparse.write_sp_file(cur_grid.filepath, cur_grid.level)
         return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Saved at {cur_grid.filepath}.{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
-    
+
     exists_as_given: bool = os.path.exists(os.path.dirname(path))
     exists_as_joint_path: bool = os.path.exists(os.path.join(cur_dir, os.path.dirname(path)))
     path_to_create = False
@@ -583,17 +589,17 @@ def save_level_sp_format(path: str = '') -> str:
 
     else:
         raise FileNotFoundError('the selected path does not exist')
-    
+
     supaparse.write_sp_file(path_to_create, cur_grid.level)
     return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Saved at {path_to_create}.{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
 
 
 def save_level_sp_format_quit(path: str = '') -> screen.Context:
     save_level_sp_format(path)
-    
+
     if not cur_grid.filepath:
         return levelset_scrn
-    
+
     return quit_to_home_scrn()
 
 
@@ -601,18 +607,18 @@ def test_level_supaplex_online() -> str:
     level_as_bytes: bytearray = supaparse.format_back_sp_data(cur_grid.level)
     compressed_level = encoder.compress_bytes(level_as_bytes)
     encoded_level: bytes = encoder.encode_bytes(compressed_level)
-    
+
     testing_url = f"{SUPAPLEX_ONLINE_TEST_BASE_URL}{str(encoded_level, encoding='utf-8')}"
-    
+
     simple_webbrowser.website(testing_url)
-    
+
     return f"{PARSER.colormap['INFO_BACKGROUND']}{PARSER.colormap['INFO_FOREGROUND']}Testing level...{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
 
 
 def verify_exit_murphy() -> str:
     if cur_grid.murphy_count > 0 and cur_grid.exit_count > 0:
         return f"{PARSER.colormap['INFO_BACKGROUND']}{PARSER.colormap['INFO_FOREGROUND']}The level has Murphies and Exits! Good job :){PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
-    
+
     return f"{PARSER.colormap['WARNING_BACKGROUND']}{PARSER.colormap['WARNING_FOREGROUND']}Hmmm... The levels is lacking either Murphies or Exits :({PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
 
 
@@ -628,7 +634,7 @@ def set_selection_outline(x1: int, y1: int, x2: int, y2: int, item: int) -> str:
 
     if y1 < 0 or y2 < 0:
         raise ValueError('Y values cannot be lower than 0')
-    
+
     border_up: list[int] = cur_grid.get_index_from_selection(x1=x1, y1=y1, x2=x2, y2=y1)
     border_down: list[int] = cur_grid.get_index_from_selection(x1=x1, y1=y2, x2=x2, y2=y2)
     border_left: list[int] = cur_grid.get_index_from_selection(x1=x1, y1=y1, x2=x1, y2=y2)
@@ -642,24 +648,24 @@ def set_selection_outline(x1: int, y1: int, x2: int, y2: int, item: int) -> str:
 
 def display_element_information(item: int) -> str: # [i] 'wtf' command
     details: list[str, str, bool | None, bool, bool] = PARSER.supaplex_element_database[str(item)]
-    
+
     name, symbol_code = details[0], details[1]
-    
+
     if details[2] is True:
         sprite_type = "'Fancy' Sprite"
-        
+
     elif details[2] is False:
         sprite_type = "'Dull' Sprite"
-        
+
     else:
         sprite_type = "Regular Sprite"
-    
+
     destructible: str = 'Destructible' if details[3] is True else "Indestructible"
-    
+
     explosive: str = 'Explosive' if details[4] is True else 'Not Explosive'
 
     return f"{PARSER.colormap['INFO_BACKGROUND']}{PARSER.colormap['INFO_FOREGROUND']}Element #{item}: {name} (Symbol {symbol_code}; {sprite_type}; {destructible}; {explosive}){PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
-    
+
 
 def quit_to_home_scrn() -> screen.Context:
     home_scrn.update_state(TITLE)
@@ -681,17 +687,17 @@ def open_repository_on_browser() -> str:
 
 def check_for_updates():
     global LATEST
-    
+
     # [i] If there isn't a cached version...
     if LATEST is None:
         try:
             response = requests.get('https://api.github.com/repos/MF366-Coding/TSpE/releases/latest', timeout=1)
             data = json.loads(response.text)
             LATEST = data['tag_name']
-            
+
         except requests.RequestException:
             return f"{PARSER.colormap['WARNING_BACKGROUND']}{PARSER.colormap['WARNING_FOREGROUND']}Could not get the latest release :({PARSER.colormap['RESET_ALL']}\n\n{TITLE}"
-    
+
     return f"{PARSER.colormap['INFO_BACKGROUND']}{PARSER.colormap['INFO_FOREGROUND']}Latest Stable: {LATEST} || Current Version: {VERSION}{PARSER.colormap['RESET_ALL']}\n\n{TITLE}"
 
 
@@ -710,16 +716,16 @@ def create_new_levelset(path: str):
 
     else:
         raise FileNotFoundError('the selected path does not exist')
-    
+
     supaparse.write_sp_file(path_to_create, supaparse.generate_empty_dat_as_bytearray())
-    
+
     levelset = supaparse.SupaplexLevelsetFile(path_to_create)
-    
+
     cur_levelset_editor = levelset_editor.LevelsetEditor(levelset, path_to_create)
     levelset_scrn.update_state(cur_levelset_editor.render_list())
 
     return levelset_scrn
-    
+
 
 def open_existing_levelset(path: str):
     global cur_levelset_editor
@@ -748,10 +754,10 @@ def open_existing_levelset(path: str):
 def add_level_to_levelset(path: str):
     cur_levelset_editor.normalize_levelset()
     cur_levelset_editor.prioritize_edited_levels()
-    
+
     if len(cur_levelset_editor.levelset) == 111:
         raise LevelLimitReached('the limit of 111 edited levels in a levelset has been reached and no more can be added')
-    
+
     if not path.lower().endswith('.sp') and not PARSER.allow_weird_extensions:
         raise FileExtensionError('weird use of file extension - should be SP (to always ignore this error, change "ignoreWeirdUseOfFileExtensions" in settings to true)')
 
@@ -770,47 +776,47 @@ def add_level_to_levelset(path: str):
 
     level_details: dict[str, list[int]] = supaparse.interpret_sp_data(supaparse.get_file_contents_as_bytearray(path_to_open))
     cur_levelset_editor.levelset.levelset.append(level_details)
-    
+
     cur_levelset_editor.normalize_levelset()
-    
+
     return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Level {path_to_open} has been added to the levelset.{PARSER.colormap['RESET_ALL']}\n\n{cur_levelset_editor.render_list()}"
 
 
 def create_new_level_inside_levelset():
     cur_levelset_editor.normalize_levelset()
     cur_levelset_editor.prioritize_edited_levels()
-    
+
     if len(cur_levelset_editor.levelset) == 111:
         raise LevelLimitReached('the limit of 111 edited levels in a levelset has been reached and no more can be added')
-    
+
     cur_levelset_editor.levelset.levelset.append(supaparse.generate_empty_sp_level_as_dict())
     cur_levelset_editor.normalize_levelset()
-    
+
     return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}A new empty level has been added to the levelset.{PARSER.colormap['RESET_ALL']}\n\n{cur_levelset_editor.render_list()}"
 
 
 def duplicate_level_in_levelset(level_num: int):
     cur_levelset_editor.normalize_levelset()
     cur_levelset_editor.prioritize_edited_levels()
-    
+
     if len(cur_levelset_editor.levelset) == 111:
         raise LevelLimitReached('the limit of 111 edited levels in a levelset has been reached and no more can be added')
-    
+
     if level_num > len(cur_levelset_editor.levelset):
         raise LevelNotFoundError(f'level {level_num} does NOT exist')
-    
+
     level_data = cur_levelset_editor.levelset[level_num - 1]
     cur_levelset_editor.levelset.levelset.append(level_data)
     cur_levelset_editor.normalize_levelset()
-    
+
     return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Level {level_num} has been duplicated.{PARSER.colormap['RESET_ALL']}\n\n{cur_levelset_editor.render_list()}"
 
 
 def edit_level_from_levelset(level_num: int) -> screen.Context:
     global cur_grid
-    
+
     cur_levelset_editor.normalize_levelset()
-    
+
     if level_num > len(cur_levelset_editor.levelset):
         raise LevelNotFoundError(f'level {level_num} does NOT exist')
 
@@ -818,7 +824,7 @@ def edit_level_from_levelset(level_num: int) -> screen.Context:
 
     cur_grid = grid.Grid(level_details, PARSER.supaplex_element_database, PARSER.element_display_type, PARSER.grid_cell_capacity, level_num)
     editor_scrn.update_state(cur_grid.render_grid())
-    
+
     levelset_scrn.update_state(cur_levelset_editor.render_list())
 
     return editor_scrn
@@ -826,24 +832,24 @@ def edit_level_from_levelset(level_num: int) -> screen.Context:
 
 def remove_level_from_levelset(level_num: int):
     cur_levelset_editor.normalize_levelset()
-    
+
     if level_num > len(cur_levelset_editor.levelset):
         raise LevelNotFoundError(f'level {level_num} does NOT exist')
 
     cur_levelset_editor.levelset.levelset.pop(level_num - 1)
     cur_levelset_editor.prioritize_edited_levels()
     cur_levelset_editor.normalize_levelset()
-    
+
     return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Done.{PARSER.colormap['RESET_ALL']}\n\n{cur_levelset_editor.render_list()}"
 
 
 def save_levelset(path: str = '') -> str:
     cur_levelset_editor.normalize_levelset()
-    
+
     if not path:
         cur_levelset_editor.levelset.write_file(cur_levelset_editor.filepath)
         return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Saved at: {cur_levelset_editor.filepath}{PARSER.colormap['RESET_ALL']}\n\n{cur_levelset_editor.render_list()}"
-    
+
     exists_as_given: bool = os.path.exists(os.path.dirname(path))
     exists_as_joint_path: bool = os.path.exists(os.path.join(cur_dir, os.path.dirname(path)))
     path_to_create = False
@@ -856,7 +862,7 @@ def save_levelset(path: str = '') -> str:
 
     else:
         raise FileNotFoundError('the selected path does not exist')
-    
+
     cur_levelset_editor.levelset.write_file(path_to_create)
     return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Saved at: {path_to_create}{PARSER.colormap['RESET_ALL']}\n\n{cur_levelset_editor.render_list()}"
 
@@ -868,26 +874,26 @@ def save_levelset_quit(path: str = '') -> screen.Context:
 
 def swap_levels_in_levelset(level_a: int, level_b: int):
     cur_levelset_editor.normalize_levelset()
-    
+
     if level_a > len(cur_levelset_editor.levelset) or level_b > len(cur_levelset_editor.levelset):
         raise LevelNotFoundError("at least one of the levels doesn't exist does NOT exist")
-    
+
     level_b_data: dict[str, list[int]] = cur_levelset_editor.levelset[level_b - 1]
     level_a_data: dict[str, list[int]] = cur_levelset_editor.levelset[level_a - 1]
-    
+
     cur_levelset_editor.levelset.levelset[level_a - 1] = level_b_data
     cur_levelset_editor.levelset.levelset[level_b - 1] = level_a_data
-    
+
     cur_levelset_editor.prioritize_edited_levels()
     cur_levelset_editor.normalize_levelset()
-    
+
     return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Swapped levels {level_a} and {level_b}.{PARSER.colormap['RESET_ALL']}\n\n{cur_levelset_editor.render_list()}"
 
 
 def quit_level_editor() -> screen.Context:
     if not cur_grid.filepath:
         return levelset_scrn
-    
+
     return quit_to_home_scrn()
 
 

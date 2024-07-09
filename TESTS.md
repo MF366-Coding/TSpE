@@ -2,10 +2,10 @@
 ## Home Page Features
 - [X] `about`
 - [X] `cd`
-- [ ] `delete` / `del`
-- [ ] `dump`
-- [ ] `echo`
-- [ ] `evaluate` / `eval`
+- [X] `delete` / `del`
+- [X] `dump`
+- [X] `echo`
+- [X] `evaluate` / `eval`
 - [X] `goto` / `go`
 - [X] `load`
 - [X] `new` / `n` / `nl`
@@ -17,12 +17,12 @@
 
 ## Level Editor Features
 - [X] `attributes` / `attrs` / `at` / `@`
-- [ ] `borders` / `outline`
+- [X] `borders` / `outline`
 - [X] `change` / `ch`
-- [ ] `checkers` / `chess` / `board`
-- [ ] `container` / `square` 
+- [ ] `checkers` / `chess` / `board` **(buggy behavior when `x2 - x1` is odd number)**
+- [X] `container` / `square` 
 - [ ] `erase` / `er`
-- [ ] `fill`
+- [X] `fill`
 - [X] `fillall`
 - [ ] `match` **(known for slightly buggy behavior)**
 - [ ] `portedit` / `ported` / `pe`
