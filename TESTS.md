@@ -19,9 +19,9 @@
 - [X] `attributes` / `attrs` / `at` / `@`
 - [X] `borders` / `outline`
 - [X] `change` / `ch`
-- [ ] `checkers` / `chess` / `board` **(buggy behavior when `x2 - x1` is odd number)**
+- [X] `checkers` / `chess` / `board`
 - [X] `container` / `square` 
-- [ ] `erase` / `er`
+- [X] `erase` / `er`
 - [X] `fill`
 - [X] `fillall`
 - [ ] `match` **(known for slightly buggy behavior)**

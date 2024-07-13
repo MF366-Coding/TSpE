@@ -343,19 +343,14 @@ def change_grid_with_checkers_pattern(x1: int, y1: int, x2: int, y2: int, item_1
 
     selection_table: list[int] = cur_grid.get_index_from_selection(x1, y1, x2, y2)
 
-    if (x2 - x1) % 2 == 0:
-        item_1_table = [selection_table[i] for i in range(len(selection_table)) if i % 2 == 0]
-        item_2_table = [selection_table[i] for i in range(len(selection_table)) if i % 2 != 0]
-    
-    else: # FIXME
-        item_1_table = [selection_table[i] for i in range(len(selection_table)) if i + 1 % 2 == 0]
-        item_2_table = [selection_table[i] for i in range(len(selection_table)) if i % 2 != 0]
-
-    for index in item_1_table:
-        cur_grid.change_element_by_index(index, item_1)
+    for index in selection_table:
+        x, y = cur_grid.get_coord_from_index(index)
         
-    for index in item_2_table:
-        cur_grid.change_element_by_index(index, item_2)
+        if (x + y) % 2 == 0:
+            cur_grid.change_element_by_index(index, item_1)
+            
+        else:
+            cur_grid.change_element_by_index(index, item_2)
 
     return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Checker board recreated at ({x1}, {y1}) - ({x2}, {y2}) using elements {item_1} and {item_2}.{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
 
