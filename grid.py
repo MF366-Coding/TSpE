@@ -133,7 +133,7 @@ class Grid:
             
             aux: dict[str, list[int]] = self._LEVEL.copy()
             
-            for key, value in self._LEVEL:
+            for key, value in self._LEVEL.items():
                 if not key.startswith('special_port'):
                     continue
                 
@@ -157,7 +157,7 @@ class Grid:
             
             aux: dict[str, list[int]] = self._LEVEL.copy()
             
-            for key, value in self._LEVEL:
+            for key, value in self._LEVEL.items():
                 if not key.startswith('special_port'):
                     continue
                 

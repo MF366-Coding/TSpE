@@ -389,28 +389,6 @@ def fill_grid_with_elem_alt(element: int):
     return fill_square_area(0, 0, 59, 23, element)
 
 
-def look_for_element_occurence(element: int, skip_counter: int = 0):
-    item_coords: tuple[int, int] | None = None
-
-    for index in range(supaparse.BYTES_PER_SP_LEVEL_DATA):
-        if skip_counter < 0:
-            break
-
-        if cur_grid.level['level'][index] != element:
-            continue
-
-        if cur_grid.level['level'][index] == element:
-            if skip_counter >= 0:
-                skip_counter -= 1
-                item_coords = cur_grid.get_coord_from_index(index)
-                continue
-
-    if item_coords is None:
-        return f"{PARSER.colormap['WARNING_BACKGROUND']}{PARSER.colormap['WARNING_FOREGROUND']}Element #{element} not found{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
-
-    return f"{PARSER.colormap['INFO_BACKGROUND']}{PARSER.colormap['INFO_FOREGROUND']}Element #{element} found at ({item_coords[0]}, {item_coords[1]}){PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
-
-
 def edit_special_port_properties(x: int, y: int, gravity: int = -1, frozen_zonks: int = -1, frozen_enemies: int = -1, unused_byte: int = -1):
     if x > 59:
         raise ValueError('X value cannot be greater than 59')
@@ -437,23 +415,20 @@ def edit_special_port_properties(x: int, y: int, gravity: int = -1, frozen_zonks
         raise grid.ElementError(f"couldn't find a special port with hi {hi} and lo {lo}")
 
     if gravity >= 0:
-        gravity = supaparse.clamp_value(gravity, 0, 8)
-        cur_grid.level[f'special_port{special_port_id}'][2] = [gravity]
+        gravity = supaparse.clamp_value(gravity, 0, 1)
+        cur_grid.level[f'special_port{special_port_id}'][2] = gravity
 
     if frozen_zonks >= 0:
-        if frozen_zonks > 2:
-            frozen_zonks = 0
-
-        frozen_zonks = supaparse.clamp_value(frozen_zonks, 1, 2)
-        cur_grid.level[f'special_port{special_port_id}'][3] = [frozen_zonks]
+        frozen_zonks = supaparse.clamp_value(frozen_zonks + 1, 1, 2)
+        cur_grid.level[f'special_port{special_port_id}'][3] = frozen_zonks
 
     if frozen_enemies >= 0:
         frozen_enemies = supaparse.clamp_value(frozen_enemies, 0, 1)
-        cur_grid.level[f'special_port{special_port_id}'][4] = [frozen_enemies]
+        cur_grid.level[f'special_port{special_port_id}'][4] = frozen_enemies
 
     if unused_byte >= 0:
         unused_byte = supaparse.clamp_value(unused_byte, 0, 255)
-        cur_grid.level[f'special_port{special_port_id}'][5] = [unused_byte]
+        cur_grid.level[f'special_port{special_port_id}'][5] = unused_byte
 
     return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Changes applied to port at ({x}, {y})!{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
 
@@ -956,7 +931,6 @@ editor_commands: list[screen.Command] = [
     screen.Command('er', editor_coord_args, erase_grid_entry),
     screen.Command('fill', [screen.Argument('item', 'int')], fill_grid_with_elem),
     screen.Command('fillall', [screen.Argument('item', 'int')], fill_grid_with_elem_alt),
-    screen.Command('match', [screen.Argument('element', 'int'), screen.OptionalArgument('skip_counter', 0, 'int')], look_for_element_occurence),
     screen.Command('portedit', editor_coord_args + [screen.OptionalArgument('gravity', -1, 'int'), screen.OptionalArgument('frozen_zonks', -1, 'int'), screen.OptionalArgument('frozen_enemies', -1, 'int'), screen.OptionalArgument('unused_byte', -1, 'int')], edit_special_port_properties),
     screen.Command('ported', editor_coord_args + [screen.OptionalArgument('gravity', -1, 'int'), screen.OptionalArgument('frozen_zonks', -1, 'int'), screen.OptionalArgument('frozen_enemies', -1, 'int'), screen.OptionalArgument('unused_byte', -1, 'int')], edit_special_port_properties),
     screen.Command('pe', editor_coord_args + [screen.OptionalArgument('gravity', -1, 'int'), screen.OptionalArgument('frozen_zonks', -1, 'int'), screen.OptionalArgument('frozen_enemies', -1, 'int'), screen.OptionalArgument('unused_byte', -1, 'int')], edit_special_port_properties),
@@ -989,7 +963,7 @@ editor_commands: list[screen.Command] = [
 
 levelset_commands = [
     screen.Command('add', [screen.Argument('path', 'str')], add_level_to_levelset),
-    screen.Command('create', [], create_new_level_inside_levelset),
+    # /-/ screen.Command('create', [], create_new_level_inside_levelset),
     screen.Command('duplicate', [screen.Argument('level_num', 'int')], duplicate_level_in_levelset),
     screen.Command('dup', [screen.Argument('level_num', 'int')], duplicate_level_in_levelset),
     screen.Command('edit', [screen.Argument('level_num', 'int')], edit_level_from_levelset),

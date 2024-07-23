@@ -24,9 +24,8 @@
 - [X] `erase` / `er`
 - [X] `fill`
 - [X] `fillall`
-- [ ] `match` **(known for slightly buggy behavior)**
-- [ ] `portedit` / `ported` / `pe`
-- [ ] `portinfo` / `pinfo` / `pinf`
+- [X] `portedit` / `ported` / `pe`
+- [X] `portinfo` / `pinfo` / `pinf`
 - [ ] `random` / `rand` **(known for buggy behavior and I mean buggy as HELL)**
 - [ ] `replace` / `rep`
 - [ ] `save` / `s`
