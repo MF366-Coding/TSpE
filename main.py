@@ -20,6 +20,7 @@ class FileExtensionError(Exception): ...
 class SupaplexStructureError(Exception): ...
 class LevelLimitReached(Exception): ...
 class LevelNotFoundError(Exception): ...
+class SkipCounterError(Exception): ...
 
 VERSION = "v0.0.1"
 LATEST = None
@@ -387,6 +388,34 @@ def fill_grid_with_elem(element: int):
 
 def fill_grid_with_elem_alt(element: int):
     return fill_square_area(0, 0, 59, 23, element)
+
+
+def look_for_element_occurence(element: int, skip_counter: int = 0):
+    item_coords: tuple[int, int] | None = None
+    
+    if skip_counter > cur_grid.level['level'].count(element):
+        raise SkipCounterError('bad use of argument "skip_counter" - it must not be greater than the amount of elements of this type in the grid')
+    
+    if skip_counter < 0:
+        raise SkipCounterError('bad use of argument "skip_counter" - it must not be lower than 0')
+    
+    for index in range(supaparse.BYTES_PER_SP_LEVEL_DATA):
+        if skip_counter < 0:
+            break
+        
+        if cur_grid.level['level'][index] != element:
+            continue
+        
+        if cur_grid.level['level'][index] == element:
+            if skip_counter >= 0:
+                skip_counter -= 1
+                item_coords = cur_grid.get_coord_from_index(index)
+                continue
+            
+    if item_coords is None:
+        return f"{PARSER.colormap['WARNING_BACKGROUND']}{PARSER.colormap['WARNING_FOREGROUND']}Element #{element} not found{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
+    
+    return f"{PARSER.colormap['INFO_BACKGROUND']}{PARSER.colormap['INFO_FOREGROUND']}Element #{element} found at ({item_coords[0]}, {item_coords[1]}){PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
 
 
 def edit_special_port_properties(x: int, y: int, gravity: int = -1, frozen_zonks: int = -1, frozen_enemies: int = -1, unused_byte: int = -1):
@@ -931,6 +960,7 @@ editor_commands: list[screen.Command] = [
     screen.Command('er', editor_coord_args, erase_grid_entry),
     screen.Command('fill', [screen.Argument('item', 'int')], fill_grid_with_elem),
     screen.Command('fillall', [screen.Argument('item', 'int')], fill_grid_with_elem_alt),
+    screen.Command('match', [screen.Argument('element', 'int'), screen.OptionalArgument('skip_counter', 0, 'int')], look_for_element_occurence),
     screen.Command('portedit', editor_coord_args + [screen.OptionalArgument('gravity', -1, 'int'), screen.OptionalArgument('frozen_zonks', -1, 'int'), screen.OptionalArgument('frozen_enemies', -1, 'int'), screen.OptionalArgument('unused_byte', -1, 'int')], edit_special_port_properties),
     screen.Command('ported', editor_coord_args + [screen.OptionalArgument('gravity', -1, 'int'), screen.OptionalArgument('frozen_zonks', -1, 'int'), screen.OptionalArgument('frozen_enemies', -1, 'int'), screen.OptionalArgument('unused_byte', -1, 'int')], edit_special_port_properties),
     screen.Command('pe', editor_coord_args + [screen.OptionalArgument('gravity', -1, 'int'), screen.OptionalArgument('frozen_zonks', -1, 'int'), screen.OptionalArgument('frozen_enemies', -1, 'int'), screen.OptionalArgument('unused_byte', -1, 'int')], edit_special_port_properties),
