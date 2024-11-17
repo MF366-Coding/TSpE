@@ -6,6 +6,7 @@
 - [X] `dump`
 - [X] `echo`
 - [X] `evaluate` / `eval`
+- [X] `explorer`
 - [X] `goto` / `go`
 - [X] `load`
 - [X] `new` / `n` / `nl`
@@ -21,24 +22,25 @@
 - [X] `change` / `ch`
 - [X] `checkers` / `chess` / `board`
 - [X] `container` / `square` 
+- [X] `count` / `c`
 - [X] `erase` / `er`
 - [X] `fill`
 - [X] `fillall`
-- [ ] `match`
+- [X] `match`
 - [X] `portedit` / `ported` / `pe`
 - [X] `portinfo` / `pinfo` / `pinf`
-- [ ] `random` / `rand` **(known for buggy behavior and I mean buggy as HELL)**
-- [ ] `replace` / `rep`
-- [ ] `save` / `s`
+- [X] `random` / `rand`
+- [X] `replace` / `rep`
+- [x] `save` / `s`
 - [X] `sotest`
-- [ ] `sq` / `savequit`
-- [ ] `verify`
-- [ ] `walls` / `wls`
+- [X] `sq` / `savequit`
+- [X] `verify`
+- [X] `walls` / `wls`
 - [X] `wtf` / `wth`
 
 ## Levelset Editor Features
 - [ ] `add`
-- [ ] `create` **(redundant; likely to be removed)**
+- [x] ~~`create` **(redundant; likely to be removed)**~~
 - [ ] `duplicate` / `dup`
 - [ ] `edit` / `ed`
 - [ ] `remove` / `rm`

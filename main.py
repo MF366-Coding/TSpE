@@ -1,5 +1,6 @@
 # main.py
 
+import subprocess
 import requests
 import simple_webbrowser
 import sys
@@ -101,9 +102,27 @@ def change_directory(path: str) -> str:
     else:
         raise FileNotFoundError('the selected path does not exist')
 
-    cur_dir = path_to_change_to
+    cur_dir = os.path.abspath(path_to_change_to)
+    os.chdir(cur_dir)
 
     return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Working Directory is now set to: {cur_dir}{PARSER.colormap['RESET_ALL']}\n\n{TITLE}"
+
+
+def open_folder_in_explorer() -> str:
+    match sys.platform:
+        case 'win32':
+            os.startfile(cur_dir)
+            
+        case 'darwin':
+            subprocess.run(["open", cur_dir])
+            
+        case 'linux':
+            subprocess.run(["xdg-open", cur_dir])
+            
+        case _:
+            raise OSError('your OS does not support opening a file browser in the working directory')
+
+    return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Opened the system's file browser on directory: {cur_dir}{PARSER.colormap['RESET_ALL']}\n\n{TITLE}"
 
 
 def delete_file_or_folder(path: str) -> str:
@@ -393,7 +412,7 @@ def fill_grid_with_elem_alt(element: int):
 def look_for_element_occurence(element: int, skip_counter: int = 0):
     item_coords: tuple[int, int] | None = None
     
-    if skip_counter > cur_grid.level['level'].count(element):
+    if skip_counter > cur_grid.level['level'].count(element) - 1:
         raise SkipCounterError('bad use of argument "skip_counter" - it must not be greater than the amount of elements of this type in the grid')
     
     if skip_counter < 0:
@@ -524,22 +543,31 @@ def fill_area_randomly(x1: int, y1: int, x2: int, y2: int, item: int, num: int, 
     selection_table: list[int] = cur_grid.get_index_from_selection(x1, y1, x2, y2)
 
     if num < 1:
-        num = len(selection_table)
+        raise ValueError(f'TSpE can\'t generate {num} elements - a number abova 1 must be given')
+    
+    elif num > len(selection_table):
+        raise ValueError(f'TSpE can\'t generate {num} elements - a number below the amount of cells selected must be given')
 
-    for index, match in enumerate(selection_table.copy(), 0):
-        if num == 0:
+    elif num == len(selection_table):
+        raise ValueError('seems like you are trying to fill the whole area as the number given is the number of cells selected - use area filling commands instead')
+
+    random.shuffle(selection_table)
+    
+    filled_count = 0
+
+    for index in selection_table.copy():
+        if filled_count >= num:
             break
 
-        if random.choice((True, False, False)):
-            if keep_intact and cur_grid.level['level'][match] != 0:
-                continue
-
-            num -= 1
-            selection_table.pop(index)
+        if keep_intact and cur_grid.level['level'][index] != 0:
             continue
-
-    for index in selection_table:
+        
         cur_grid.change_element_by_index(index=index, element=item)
+        filled_count += 1
+        selection_table.remove(index)
+
+    if filled_count == 0:
+        return f"{PARSER.colormap['WARNING_BACKGROUND']}{PARSER.colormap['WARNING_FOREGROUND']}Unable to randomize item while also keeping the cells intact, as all of them are taken.{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
 
     return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Randomized item {item} sucessfully.{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
 
@@ -564,6 +592,10 @@ def replace_item_for_new_in_area(x1: int, y1: int, x2: int, y2: int, old_item: i
             cur_grid.change_element_by_index(index, new_item)
 
     return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Operation completed with no errors.{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
+
+
+def count_number_of_items_in_grid(item: int) -> str:
+    return f"{PARSER.colormap['INFO_BACKGROUND']}{PARSER.colormap['INFO_FOREGROUND']}There are {cur_grid.level['level'].count(item)} occurences of Element #{item}.{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
 
 
 def save_level_sp_format(path: str = '') -> str:
@@ -781,6 +813,7 @@ def add_level_to_levelset(path: str):
     return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Level {path_to_open} has been added to the levelset.{PARSER.colormap['RESET_ALL']}\n\n{cur_levelset_editor.render_list()}"
 
 
+'''
 def create_new_level_inside_levelset():
     cur_levelset_editor.normalize_levelset()
     cur_levelset_editor.prioritize_edited_levels()
@@ -792,6 +825,7 @@ def create_new_level_inside_levelset():
     cur_levelset_editor.normalize_levelset()
 
     return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}A new empty level has been added to the levelset.{PARSER.colormap['RESET_ALL']}\n\n{cur_levelset_editor.render_list()}"
+'''    
 
 
 def duplicate_level_in_levelset(level_num: int):
@@ -911,6 +945,7 @@ home_commands: list[screen.Command] = [
     screen.Command('echo', home_echo_args, echo_like_command),
     screen.Command('evaluate', home_eval_args, evaluate_pythonic_expression),
     screen.Command('eval', home_eval_args, evaluate_pythonic_expression),
+    screen.Command('explorer', [], open_folder_in_explorer),
     screen.Command('goto', home_cd_alt_args, change_directory_alternative),
     screen.Command('go', home_cd_alt_args, change_directory_alternative),
     screen.Command('load', [], reload_tspe_settings),
@@ -938,9 +973,9 @@ home_commands: list[screen.Command] = [
 level_attributes_args: list[screen.OptionalArgument] = [screen.OptionalArgument('infotrons', -1, 'int'), screen.OptionalArgument('gravity', -1, 'int'),
                                                         screen.OptionalArgument('frozen_zonks', -1, 'int'), screen.OptionalArgument(name='level_name', default_value=DEFAULT_PLACEHOLDER)]
 editor_change_args: list[screen.Argument] = [screen.Argument('x', 'int'), screen.Argument('y', 'int'), screen.Argument('new_item', 'int')]
-editor_checkers_args = [screen.Argument('x1', 'int'), screen.Argument('y1', 'int'), screen.Argument('x2', 'int'), screen.Argument('y2', 'int'), screen.Argument('item_1', 'int'), screen.Argument('item_2', 'int')]
-editor_selection_args = [screen.Argument('x1', 'int'), screen.Argument('y1', 'int'), screen.Argument('x2', 'int'), screen.Argument('y2', 'int'), screen.Argument('item', 'int')]
-editor_coord_args = [screen.Argument('x', 'int'), screen.Argument('y', 'int')]
+editor_checkers_args: list[screen.Argument] = [screen.Argument('x1', 'int'), screen.Argument('y1', 'int'), screen.Argument('x2', 'int'), screen.Argument('y2', 'int'), screen.Argument('item_1', 'int'), screen.Argument('item_2', 'int')]
+editor_selection_args: list[screen.Argument] = [screen.Argument('x1', 'int'), screen.Argument('y1', 'int'), screen.Argument('x2', 'int'), screen.Argument('y2', 'int'), screen.Argument('item', 'int')]
+editor_coord_args: list[screen.Argument] = [screen.Argument('x', 'int'), screen.Argument('y', 'int')]
 
 editor_commands: list[screen.Command] = [
     screen.Command("attributes", level_attributes_args, edit_level_properties),
@@ -953,6 +988,8 @@ editor_commands: list[screen.Command] = [
     screen.Command('ch', editor_change_args, change_item_in_grid),
     screen.Command('checkers', editor_checkers_args, change_grid_with_checkers_pattern),
     screen.Command('chess', editor_checkers_args, change_grid_with_checkers_pattern),
+    screen.Command('c', [screen.Argument('item', 'int')], count_number_of_items_in_grid),
+    screen.Command('count', [screen.Argument('item', 'int')], count_number_of_items_in_grid),
     screen.Command('board', editor_checkers_args, change_grid_with_checkers_pattern),
     screen.Command('container', editor_selection_args, fill_square_area),
     screen.Command('square', editor_selection_args, fill_square_area),
