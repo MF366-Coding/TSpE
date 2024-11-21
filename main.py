@@ -678,6 +678,9 @@ def set_selection_outline(x1: int, y1: int, x2: int, y2: int, item: int) -> str:
 
 
 def display_element_information(item: int) -> str: # [i] 'wtf' command
+    if item > 40 and str(item) not in PARSER.supaplex_element_database:
+        return f"{PARSER.colormap['INFO_BACKGROUND']}{PARSER.colormap['INFO_FOREGROUND']}Element #{item}: {'Trash (Assuming)'}{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
+    
     details: list[str, str, bool | None, bool, bool] = PARSER.supaplex_element_database[str(item)]
 
     name, symbol_code = details[0], details[1]
@@ -707,13 +710,18 @@ def quit_app():
     exit_program.leave_program(PARSER)
 
 
-def reload_current_screen() -> screen.Context:
-    return SCREEN.context
+def reload_current_screen() -> str:
+    return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Reloading finished.{PARSER.colormap['RESET_ALL']}\n\n{cur_levelset_editor.render_list()}"
 
 
 def open_repository_on_browser() -> str:
     simple_webbrowser.website('https://github.com/MF366-Coding/TSpE')
-    return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}:){PARSER.colormap['RESET_ALL']}\n\n{TITLE}"
+    return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}:D{PARSER.colormap['RESET_ALL']}\n\n{TITLE}"
+
+
+def get_help():
+    simple_webbrowser.website('https://github.com/MF366-Coding/TSpE')
+    return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Help is on its way.{PARSER.colormap['RESET_ALL']}\n\n{TITLE}"
 
 
 def check_for_updates():
@@ -777,6 +785,8 @@ def open_existing_levelset(path: str):
     levelset = supaparse.SupaplexLevelsetFile(path_to_open)
 
     cur_levelset_editor = levelset_editor.LevelsetEditor(levelset, path_to_open)
+    cur_levelset_editor.prioritize_edited_levels()
+    cur_levelset_editor.normalize_levelset()
     levelset_scrn.update_state(cur_levelset_editor.render_list())
 
     return levelset_scrn
@@ -813,21 +823,6 @@ def add_level_to_levelset(path: str):
     return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Level {path_to_open} has been added to the levelset.{PARSER.colormap['RESET_ALL']}\n\n{cur_levelset_editor.render_list()}"
 
 
-'''
-def create_new_level_inside_levelset():
-    cur_levelset_editor.normalize_levelset()
-    cur_levelset_editor.prioritize_edited_levels()
-
-    if len(cur_levelset_editor.levelset) == 111:
-        raise LevelLimitReached('the limit of 111 edited levels in a levelset has been reached and no more can be added')
-
-    cur_levelset_editor.levelset.levelset.append(supaparse.generate_empty_sp_level_as_dict())
-    cur_levelset_editor.normalize_levelset()
-
-    return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}A new empty level has been added to the levelset.{PARSER.colormap['RESET_ALL']}\n\n{cur_levelset_editor.render_list()}"
-'''    
-
-
 def duplicate_level_in_levelset(level_num: int):
     cur_levelset_editor.normalize_levelset()
     cur_levelset_editor.prioritize_edited_levels()
@@ -843,6 +838,24 @@ def duplicate_level_in_levelset(level_num: int):
     cur_levelset_editor.normalize_levelset()
 
     return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Level {level_num} has been duplicated.{PARSER.colormap['RESET_ALL']}\n\n{cur_levelset_editor.render_list()}"
+
+
+def change_display_settings(left_col: int = 0, right_col: int = 59, and_logic: bool = False):
+    if left_col > right_col:
+        raise ValueError('the left column must be smaller than the right one')
+    
+    if (left_col < 0) or (right_col < 1):
+        raise ValueError('the left column must be given a value greater or equal to 0 AND the right one must be given a value greater to 0')
+    
+    if (left_col == 0) and (right_col == 59) and (and_logic is False):
+        cur_grid['colFULL'] = 0
+        return f"{PARSER.colormap['INFO_BACKGROUND']}{PARSER.colormap['INFO_FOREGROUND']}Displaying the full grid.{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
+        
+    cur_grid['colLEFT'] = left_col
+    cur_grid['colRIGHT'] = right_col
+    cur_grid['colLOGIC'] = '%' if and_logic else 'None'
+
+    return f"{PARSER.colormap['INFO_BACKGROUND']}{PARSER.colormap['INFO_FOREGROUND']}Displaying the grid with arguments: {left_col}; {right_col}; {'%' if and_logic else 'No Logic'}.{PARSER.colormap['RESET_ALL']}\n\n{cur_grid.render_grid()}"
 
 
 def edit_level_from_levelset(level_num: int) -> screen.Context:
@@ -939,6 +952,7 @@ home_new_level_args: list[screen.Argument, screen.OptionalArgument] = [screen.Ar
 home_commands: list[screen.Command] = [
     screen.Command('about', [], about_tspe),
     screen.Command('cd', home_cd_del_args, change_directory),
+    screen.Command('chkupd', [], check_for_updates),
     screen.Command('delete', home_cd_del_args, delete_file_or_folder),
     screen.Command('del', home_cd_del_args, delete_file_or_folder), # [i] Forgot to implement aliases - too late now - so this is how I'm gonna do it
     screen.Command('dump', [], dump_tspe_settings),
@@ -967,7 +981,9 @@ home_commands: list[screen.Command] = [
     screen.Command('reload', [], reload_current_screen),
     screen.Command('rl', [], reload_current_screen),
     screen.Command('web', [], open_repository_on_browser),
-    screen.Command('repo', [], open_repository_on_browser)
+    screen.Command('repo', [], open_repository_on_browser),
+    screen.Command('help', [], get_help),
+    screen.Command('imlost', [], get_help)
 ]
 
 level_attributes_args: list[screen.OptionalArgument] = [screen.OptionalArgument('infotrons', -1, 'int'), screen.OptionalArgument('gravity', -1, 'int'),
@@ -976,6 +992,7 @@ editor_change_args: list[screen.Argument] = [screen.Argument('x', 'int'), screen
 editor_checkers_args: list[screen.Argument] = [screen.Argument('x1', 'int'), screen.Argument('y1', 'int'), screen.Argument('x2', 'int'), screen.Argument('y2', 'int'), screen.Argument('item_1', 'int'), screen.Argument('item_2', 'int')]
 editor_selection_args: list[screen.Argument] = [screen.Argument('x1', 'int'), screen.Argument('y1', 'int'), screen.Argument('x2', 'int'), screen.Argument('y2', 'int'), screen.Argument('item', 'int')]
 editor_coord_args: list[screen.Argument] = [screen.Argument('x', 'int'), screen.Argument('y', 'int')]
+editor_display_args = [screen.OptionalArgument('left_col', 0, 'int'), screen.OptionalArgument('right_col', 59, 'int'), screen.OptionalArgument('and_logic', False, 'bool')]
 
 editor_commands: list[screen.Command] = [
     screen.Command("attributes", level_attributes_args, edit_level_properties),
@@ -993,6 +1010,13 @@ editor_commands: list[screen.Command] = [
     screen.Command('board', editor_checkers_args, change_grid_with_checkers_pattern),
     screen.Command('container', editor_selection_args, fill_square_area),
     screen.Command('square', editor_selection_args, fill_square_area),
+    screen.Command('display', editor_display_args, change_display_settings),
+    screen.Command('d:full', [], change_display_settings),
+    screen.Command('d:left', [], lambda: change_display_settings(0, 29)),
+    screen.Command('d:right', [], lambda: change_display_settings(30)),
+    screen.Command('d:f', [], change_display_settings),
+    screen.Command('d:l', [], lambda: change_display_settings(0, 29)),
+    screen.Command('d:r', [], lambda: change_display_settings(30)),
     screen.Command('erase', editor_coord_args, erase_grid_entry),
     screen.Command('er', editor_coord_args, erase_grid_entry),
     screen.Command('fill', [screen.Argument('item', 'int')], fill_grid_with_elem),
@@ -1025,12 +1049,13 @@ editor_commands: list[screen.Command] = [
     screen.Command('leave', [], quit_level_editor),
     screen.Command('q', [], quit_level_editor),
     screen.Command('reload', [], reload_current_screen),
-    screen.Command('rl', [], reload_current_screen)
+    screen.Command('rl', [], reload_current_screen),
+    screen.Command('help', [], get_help),
+    screen.Command('imlost', [], get_help)
 ]
 
 levelset_commands = [
     screen.Command('add', [screen.Argument('path', 'str')], add_level_to_levelset),
-    # /-/ screen.Command('create', [], create_new_level_inside_levelset),
     screen.Command('duplicate', [screen.Argument('level_num', 'int')], duplicate_level_in_levelset),
     screen.Command('dup', [screen.Argument('level_num', 'int')], duplicate_level_in_levelset),
     screen.Command('edit', [screen.Argument('level_num', 'int')], edit_level_from_levelset),
@@ -1049,7 +1074,9 @@ levelset_commands = [
     screen.Command('reload', [], reload_current_screen),
     screen.Command('rl', [], reload_current_screen),
     screen.Command('web', [], open_repository_on_browser),
-    screen.Command('repo', [], open_repository_on_browser)
+    screen.Command('repo', [], open_repository_on_browser),
+    screen.Command('help', [], get_help),
+    screen.Command('imlost', [], get_help)
 ]
 
 home_scrn.add_several_commands(home_commands)

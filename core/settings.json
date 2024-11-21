@@ -331,6 +331,6 @@
     "allowDelete": false,
     "useOnlineHelp": false,
     "logging": true,
-    "ignoreWeirdUseOfFileExtensions": true,
+    "ignoreWeirdUseOfFileExtensions": false,
     "cellCapacity": 5
 }

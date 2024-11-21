@@ -4,3 +4,4 @@ __pycache__
 *.bak
 settings_details_outdated.txt
 test*.sp
+test*.dat

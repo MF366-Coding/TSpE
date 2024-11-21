@@ -200,15 +200,15 @@ class Screen:
             self.read_command()
             return
 
-        try:
-            new_state: str | Context | Any = command_object.call_function(*tuple(interpreted_args))
+        #try:
+        new_state: str | Context | Any = command_object.call_function(*tuple(interpreted_args))
 
-        except Exception as e:
-            self.clear_screen()
-            self.write(f"{self._COLORMAP['ERROR_BACKGROUND']}{self._COLORMAP['ERROR_FOREGROUND']}Oops! Something went wrong... - {e}{self._COLORMAP['RESET_ALL']}\n\n{str(self._cur_context)}")
-            self._REMOVE_LINE = False
-            self.read_command()
-            return
+        #except Exception as e:
+            #self.clear_screen()
+            #self.write(f"{self._COLORMAP['ERROR_BACKGROUND']}{self._COLORMAP['ERROR_FOREGROUND']}Oops! Something went wrong... - {e}{self._COLORMAP['RESET_ALL']}\n\n{str(self._cur_context)}")
+            #self._REMOVE_LINE = False
+            #self.read_command()
+            #return
 
         if isinstance(new_state, str):
             self._cur_context.update_screen(new_state.replace('!/CURRENTRENDERCONTEXTASISNOCHANGE/', str(self._cur_context)))

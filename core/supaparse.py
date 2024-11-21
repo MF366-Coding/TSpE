@@ -189,12 +189,16 @@ class SupaplexLevelsetFile:
         return self._levelset
     
     @levelset.setter
-    def levelset(self, new_levelset: list[dict[str, list[int]]]):
+    def levelset(self, new_levelset: list[dict[str, list[int]]]) -> None:
         self._levelset = new_levelset
     
     def __getitem__(self, level_num: int) -> dict[str, list[int]]:
         # [!?] DON'T FORGET THAT THE LIST IS 0-INDEXED BUT THE LEVEL NUMS START AT 1!!
         return self._levelset[level_num]
+    
+    def __setitem__(self, key: int, value: dict[str, list[int]]) -> None:
+        # [!?] DON'T FORGET THAT THE LIST IS 0-INDEXED BUT THE LEVEL NUMS START AT 1!!
+        self._levelset[key] = value
     
     def __str__(self) -> str:
         return str(self._levelset)

@@ -11,7 +11,7 @@
 - [X] `load`
 - [X] `new` / `n` / `nl`
 - [X] `nls`
-- [ ] `ols`
+- [X] `ols`
 - [X] `open` / `o` / `ol`
 - [X] `spfix`
 - [X] `update` **(cannot be tested until a release on GitHub; will mark it as working either ways)**
@@ -39,14 +39,13 @@
 - [X] `wtf` / `wth`
 
 ## Levelset Editor Features
-- [ ] `add`
-- [x] ~~`create` **(redundant; likely to be removed)**~~
-- [ ] `duplicate` / `dup`
-- [ ] `edit` / `ed`
-- [ ] `remove` / `rm`
-- [ ] `save` / `s`
-- [ ] `sq` / `savequit`
-- [ ] `swap`
+- [X] `add`
+- [X] `duplicate` / `dup`
+- [X] `edit` / `ed`
+- [X] `remove` / `rm`
+- [X] `save` / `s`
+- [X] `sq` / `savequit`
+- [X] `swap`
 
 ## 'Anywhere' Features
 These can be used in any context.
