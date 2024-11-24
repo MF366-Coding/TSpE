@@ -49,7 +49,7 @@
 
 ## 'Anywhere' Features
 These can be used in any context.
-- [ ] `help` / `imlost` **(not implemented yet due to there not being any help yet)**
+- [X] `help` / `imlost` **(not implemented yet due to there not being any help yet)**
 - [X] `quit` / `q` / `exit` / `leave` / `logout`
 - [X] `reload` / `rl`
 - [X] `web` / `repo`
