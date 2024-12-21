@@ -10,7 +10,6 @@
 ![GitHub Repo stars](https://img.shields.io/github/stars/MF366-Coding/TSpE?color=red)
 ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/MF366-Coding/TSpE?style=flat&color=purple)
 
-This project is currently being developed!
 
 ## Try sple.me
 Want a cool editor unlike mine? [Check this out!](https://github.com/Vovan-VE/supaplex-levels-editor)
