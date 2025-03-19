@@ -334,10 +334,10 @@ Gravity {'OFF' if not self._LEVEL['initial_gravitation'][0] else 'ON'} | Frozen 
                 return int_to_hex_string(n=element)
             
             case 'symbol':
-                if self._ELEM_DATABASE is None or self._ELEM_DATABASE[element] is None or self._ELEM_DATABASE[element][1] is None:
+                if self._ELEM_DATABASE is None or self._ELEM_DATABASE[str(element)] is None or self._ELEM_DATABASE[str(element)][1] is None:
                     raise ElementError('the element\'s symbol is set to None')
                 
-                return self._ELEM_DATABASE[element][1]
+                return self._ELEM_DATABASE[str(element)][1]
             
             case _:
                 return str(element)

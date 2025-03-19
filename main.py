@@ -23,7 +23,7 @@ class LevelLimitReached(Exception): ...
 class LevelNotFoundError(Exception): ...
 class SkipCounterError(Exception): ...
 
-VERSION = "v1.0.0"
+VERSION = "v1.1.0"
 LATEST = None
 
 RENDER_CONTEXT = '!/CURRENTRENDERCONTEXTASISNOCHANGE/' # [!] deprecated, due to buggy behavior
@@ -717,7 +717,7 @@ def open_repository_on_browser() -> str:
 
 
 def get_help():
-    simple_webbrowser.website('https://coherent-wholesaler-62e.notion.site/Terminal-Supaplex-Editor-TSpE-Documentation-14036a039ece80f196e0f82590785b8b')
+    simple_webbrowser.website(f'https://mf366-coding.github.io/docs/tspe/tspe_{VERSION[1:-2]}.html')
     return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Help is on its way.{PARSER.colormap['RESET_ALL']}\n\n{TITLE}"
 
 
