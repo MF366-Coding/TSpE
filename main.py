@@ -717,7 +717,7 @@ def open_repository_on_browser() -> str:
 
 
 def get_help():
-    simple_webbrowser.website(f'https://mf366-coding.github.io/docs/tspe/tspe_{VERSION[1:-2]}.html')
+    simple_webbrowser.website(f'https://mf366-coding.github.io/documentation/tspe/tspe_{VERSION[1:-2]}.html')
     return f"{PARSER.colormap['SUCESSFUL_BACKGROUND']}{PARSER.colormap['SUCESSFUL_FOREGROUND']}Help is on its way.{PARSER.colormap['RESET_ALL']}\n\n{TITLE}"
 
 
