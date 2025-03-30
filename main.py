@@ -15,7 +15,6 @@ import grid
 # pylint: disable=W0603
 # pylint: disable=W0123
 
-
 class TagError(Exception): ...
 class FileExtensionError(Exception): ...
 class SupaplexStructureError(Exception): ...
@@ -975,8 +974,9 @@ home_commands: list[screen.Command] = [
     screen.Command('exit', [], quit_app),
     screen.Command('leave', [], quit_app),
     screen.Command('logout', [], quit_app),
-    screen.Command('reload', [], reload_current_screen),
-    screen.Command('rl', [], reload_current_screen),
+    # [!!] bug fix: reload was incorrectly marked as an Anywhere command
+    # /-/ screen.Command('reload', [], reload_current_screen),
+    # /-/ screen.Command('rl', [], reload_current_screen),
     screen.Command('web', [], open_repository_on_browser),
     screen.Command('repo', [], open_repository_on_browser),
     screen.Command('help', [], get_help),
@@ -1045,8 +1045,9 @@ editor_commands: list[screen.Command] = [
     screen.Command('exit', [], quit_level_editor),
     screen.Command('leave', [], quit_level_editor),
     screen.Command('q', [], quit_level_editor),
-    screen.Command('reload', [], reload_current_screen),
-    screen.Command('rl', [], reload_current_screen),
+    # [!!] bug fix: reload was incorrectly marked as an Anywhere command
+    # /-/ screen.Command('reload', [], reload_current_screen),
+    # /-/ screen.Command('rl', [], reload_current_screen),
     screen.Command('help', [], get_help),
     screen.Command('imlost', [], get_help)
 ]
